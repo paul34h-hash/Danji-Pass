@@ -3,9 +3,12 @@
     "public": ".",
     "ignore": [
       "firebase.json",
-      ".github",
+      ".firebaserc",
+      ".github/**",
       ".gitignore",
-      "README.md"
+      ".git/**",
+      "README.md",
+      "node_modules/**"
     ],
     "rewrites": [
       {
