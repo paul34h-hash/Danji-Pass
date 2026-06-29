@@ -1,0 +1,22 @@
+name: Danji Pass — Firebase Deploy
+
+on:
+  push:
+    branches:
+      - main   # main 브랜치에 push 할 때마다 자동 배포
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Firebase Hosting 배포
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken:        ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId:        live
+          projectId:        danji-pass   # ← Firebase 프로젝트 ID로 변경
