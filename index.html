@@ -67,7 +67,6 @@
           "tertiary": "#7b2600",
           "inverse-primary": "#b2c5ff",
           "tertiary-fixed": "#ffdbcf",
-          /* 상태 색상 — 시맨틱 팔레트 */
           "status-success": "#1d8102",
           "status-success-bg": "#e6f4e6",
           "status-success-header": "#1d8102",
@@ -119,17 +118,13 @@
     min-height: max(884px, 100dvh);
   }
 
-  /* 커스텀 키패드 키 눌림 효과 */
   .key-btn {
     transition: transform 0.08s ease, background-color 0.08s ease;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
   }
-  .key-btn:active {
-    transform: scale(0.93);
-  }
+  .key-btn:active { transform: scale(0.93); }
 
-  /* 입력 필드 커서 깜빡임 */
   .plate-cursor::after {
     content: '|';
     animation: blink 1s step-end infinite;
@@ -137,42 +132,21 @@
     font-weight: 300;
     margin-left: 2px;
   }
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0; }
-  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-  /* 결과 카드 슬라이드인 */
-  .result-card {
-    animation: slideIn 0.25s ease-out;
-  }
+  .result-card { animation: slideIn 0.25s ease-out; }
   @keyframes slideIn {
     from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* 확인필요 카드 내 차량 행 hover */
-  .vehicle-row {
-    transition: background-color 0.12s ease;
-    cursor: pointer;
-  }
-  .vehicle-row:hover {
-    background-color: #fff8e1;
-  }
-  .vehicle-row:active {
-    background-color: #ffe082;
-  }
+  .vehicle-row { transition: background-color 0.12s ease; cursor: pointer; }
+  .vehicle-row:hover { background-color: #fff8e1; }
+  .vehicle-row:active { background-color: #ffe082; }
 
-  /* 검색 모드 토글 */
-  .mode-tab.active {
-    background-color: #003d9b;
-    color: #ffffff;
-  }
-  .mode-tab {
-    transition: background-color 0.15s ease, color 0.15s ease;
-  }
+  .mode-tab.active { background-color: #003d9b; color: #ffffff; }
+  .mode-tab { transition: background-color 0.15s ease, color 0.15s ease; }
 
-  /* 스크린 테두리 상태 오버레이 */
   #screen-border {
     pointer-events: none;
     position: fixed;
@@ -181,19 +155,14 @@
     border: 4px solid transparent;
     transition: border-color 0.3s ease;
   }
-  #screen-border.border-fail   { border-color: #d32f2f; }
-  #screen-border.border-warn   { border-color: #e3b000; }
-  #screen-border.border-ok     { border-color: #1d8102; }
+  #screen-border.border-fail { border-color: #d32f2f; }
+  #screen-border.border-warn { border-color: #e3b000; }
+  #screen-border.border-ok   { border-color: #1d8102; }
 
-  /* 빈 상태 */
-  #empty-state {
-    transition: opacity 0.2s ease;
-  }
+  #empty-state { transition: opacity 0.2s ease; }
 
-  /* 제브라 스트라이프 */
   .zebra-row:nth-child(even) { background-color: #f3f4f6; }
 
-  /* 하단 탭 바 — 활성 탭 스타일 */
   .nav-tab { -webkit-tap-highlight-color: transparent; transition: color 0.15s ease; }
   .nav-tab.active-tab { color: #003d9b; }
   .nav-tab.active-tab .nav-icon {
@@ -201,28 +170,23 @@
   }
   .nav-tab.active-tab .nav-label { font-weight: 700; }
 
-  /* 탭 전환 페이드 */
   .page-view { animation: pageFadeIn 0.18s ease-out; }
   @keyframes pageFadeIn {
     from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* 토글 스위치 */
-  .toggle-on  { background-color: #003d9b; }
+  .toggle-on { background-color: #003d9b; }
   .toggle-on .toggle-knob { transform: translateX(1.5rem); }
+
+  /* 대형 결과 카드 — 화면 메인 콘텐츠로 확대 */
+  .result-hero { min-height: 260px; }
 </style>
 </head>
 <body class="bg-surface text-on-surface min-h-screen flex flex-col">
 
-<!-- ══════════════════════════════════════════
-     화면 상태 테두리 오버레이 (DESIGN.md: Status Overlays)
-════════════════════════════════════════════ -->
 <div id="screen-border"></div>
 
-<!-- ══════════════════════════════════════════
-     메인 콘텐츠
-════════════════════════════════════════════ -->
 <main class="flex-1 flex flex-col pb-24">
 
   <!-- 상단 앱바 -->
@@ -232,305 +196,229 @@
       <h2 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary" id="page-title">차량 조회</h2>
     </div>
     <div class="flex items-center gap-2">
+      <span id="sync-indicator" class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-40" title="동기화 상태">cloud_done</span>
       <span class="text-xs text-on-surface-variant" id="header-data-date"></span>
     </div>
   </header>
 
-  <!-- ── 페이지: 차량 조회 ── -->
+  <!-- ══════════════════════════════════════════
+       페이지: 차량 조회
+  ════════════════════════════════════════════ -->
   <div id="page-search" class="page-view">
-  <section class="p-margin-mobile space-y-5 max-w-2xl mx-auto w-full">
+  <section class="p-margin-mobile space-y-4 max-w-2xl mx-auto w-full">
 
-    <!-- ── 검색 모드 토글 (4자리 / 전체번호) ── -->
+    <!-- 검색 모드 토글 -->
     <div class="flex bg-surface-container rounded-lg p-1 gap-1">
-      <button
-        class="mode-tab active flex-1 h-10 rounded-lg text-sm font-bold"
-        data-mode="last4"
-        onclick="switchMode('last4')"
-      >뒤 4자리</button>
-      <button
-        class="mode-tab flex-1 h-10 rounded-lg text-sm font-bold text-on-surface-variant"
-        data-mode="full"
-        onclick="switchMode('full')"
-      >전체 번호</button>
+      <button class="mode-tab active flex-1 h-10 rounded-lg text-sm font-bold" data-mode="last4" onclick="switchMode('last4')">뒤 4자리</button>
+      <button class="mode-tab flex-1 h-10 rounded-lg text-sm font-bold text-on-surface-variant" data-mode="full" onclick="switchMode('full')">전체 번호</button>
     </div>
 
-    <!-- ── 번호판 입력 디스플레이 ── -->
-    <div class="bg-surface-container-lowest border-2 border-outline-variant rounded-xl px-6 py-5 flex items-center justify-between shadow-sm transition-all"
-         id="input-display-box">
+    <!-- 번호판 입력 디스플레이 -->
+    <div class="bg-surface-container-lowest border-2 border-outline-variant rounded-xl px-6 py-5 flex items-center justify-between shadow-sm transition-all" id="input-display-box">
       <div class="flex-1">
         <p class="text-xs text-on-surface-variant mb-1 font-medium" id="input-label">차량번호 뒤 4자리 입력</p>
-        <!-- 입력 표시: display-plate 사이즈, JetBrains Mono -->
-        <div
-          class="font-label-mono text-[40px] leading-none tracking-widest text-on-surface plate-cursor"
-          id="plate-display"
-          style="font-family: 'JetBrains Mono', monospace; font-weight: 600; letter-spacing: 0.12em;"
-        >
+        <div class="font-label-mono text-[40px] leading-none tracking-widest text-on-surface plate-cursor" id="plate-display"
+             style="font-family: 'JetBrains Mono', monospace; font-weight: 600; letter-spacing: 0.12em;">
           <span id="plate-text" class="text-on-surface-variant">0000</span>
         </div>
       </div>
-      <!-- 지우기 전체 버튼 -->
-      <button
-        onclick="clearAll()"
-        class="ml-4 w-12 h-12 flex items-center justify-center rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-90 transition-all text-on-surface-variant"
-        title="전체 지우기"
-      >
+      <button onclick="clearAll()" class="ml-4 w-12 h-12 flex items-center justify-center rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-90 transition-all text-on-surface-variant" title="전체 지우기">
         <span class="material-symbols-outlined">close</span>
       </button>
     </div>
 
-    <!-- ── 커스텀 키패드 ── -->
+    <!-- 커스텀 키패드 -->
     <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-3 shadow-sm">
-      <!-- 숫자 1–9 -->
       <div class="grid grid-cols-3 gap-2 mb-2">
-        <button class="key-btn h-[60px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface hover:bg-surface-container-high active:bg-surface-container-highest" onclick="pressKey('1')">1</button>
-        <button class="key-btn h-[60px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('2')">2</button>
-        <button class="key-btn h-[60px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('3')">3</button>
-        <button class="key-btn h-[60px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('4')">4</button>
-        <button class="key-btn h-[60px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('5')">5</button>
-        <button class="key-btn h-[60px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('6')">6</button>
-        <button class="key-btn h-[60px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('7')">7</button>
-        <button class="key-btn h-[60px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('8')">8</button>
-        <button class="key-btn h-[60px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('9')">9</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high active:bg-surface-container-highest" onclick="pressKey('1')">1</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('2')">2</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('3')">3</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('4')">4</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('5')">5</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('6')">6</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('7')">7</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('8')">8</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('9')">9</button>
       </div>
-      <!-- 하단 행: 백스페이스 / 0 / 확인 -->
       <div class="grid grid-cols-3 gap-2">
-        <!-- 전체번호 모드: 한글 자모 토글 버튼 -->
-        <button
-          id="btn-hangul"
-          class="key-btn h-[60px] bg-error-container rounded-lg text-[22px] font-bold text-on-error-container hover:opacity-80 hidden"
-          onclick="toggleHangul()"
-          title="한글 입력"
-        >가</button>
-        <!-- 뒤4자리 모드: 백스페이스 -->
-        <button
-          id="btn-backspace"
-          class="key-btn h-[60px] bg-error-container rounded-lg flex items-center justify-center text-on-error-container hover:opacity-80"
-          onclick="pressBackspace()"
-        >
-          <span class="material-symbols-outlined text-[28px]">backspace</span>
+        <button id="btn-hangul" class="key-btn h-[56px] bg-error-container rounded-lg text-[20px] font-bold text-on-error-container hover:opacity-80 hidden" onclick="toggleHangul()" title="한글 입력">가</button>
+        <button id="btn-backspace" class="key-btn h-[56px] bg-error-container rounded-lg flex items-center justify-center text-on-error-container hover:opacity-80" onclick="pressBackspace()">
+          <span class="material-symbols-outlined text-[26px]">backspace</span>
         </button>
-        <button class="key-btn h-[60px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('0')">0</button>
-        <button
-          class="key-btn h-[60px] bg-primary-container rounded-lg text-[18px] font-bold text-on-primary hover:opacity-90"
-          onclick="doSearch()"
-          id="btn-confirm"
-        >확인</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('0')">0</button>
+        <button class="key-btn h-[56px] bg-primary-container rounded-lg text-[16px] font-bold text-on-primary hover:opacity-90" onclick="doSearch()" id="btn-confirm">확인</button>
       </div>
 
-      <!-- 전체번호 모드 전용: 한글 자모 키패드 -->
       <div id="hangul-pad" class="hidden mt-2">
         <div class="grid grid-cols-5 gap-1">
-          <!-- 가나다라... 주요 지역 자모 -->
-          <button class="key-btn h-[48px] bg-surface-container rounded-lg text-[17px] font-bold hover:bg-surface-container-high" onclick="pressKey('가')">가</button>
-          <button class="key-btn h-[48px] bg-surface-container rounded-lg text-[17px] font-bold hover:bg-surface-container-high" onclick="pressKey('나')">나</button>
-          <button class="key-btn h-[48px] bg-surface-container rounded-lg text-[17px] font-bold hover:bg-surface-container-high" onclick="pressKey('다')">다</button>
-          <button class="key-btn h-[48px] bg-surface-container rounded-lg text-[17px] font-bold hover:bg-surface-container-high" onclick="pressKey('라')">라</button>
-          <button class="key-btn h-[48px] bg-surface-container rounded-lg text-[17px] font-bold hover:bg-surface-container-high" onclick="pressKey('마')">마</button>
-          <button class="key-btn h-[48px] bg-surface-container rounded-lg text-[17px] font-bold hover:bg-surface-container-high" onclick="pressKey('바')">바</button>
-          <button class="key-btn h-[48px] bg-surface-container rounded-lg text-[17px] font-bold hover:bg-surface-container-high" onclick="pressKey('사')">사</button>
-          <button class="key-btn h-[48px] bg-surface-container rounded-lg text-[17px] font-bold hover:bg-surface-container-high" onclick="pressKey('아')">아</button>
-          <button class="key-btn h-[48px] bg-surface-container rounded-lg text-[17px] font-bold hover:bg-surface-container-high" onclick="pressKey('자')">자</button>
-          <button class="key-btn h-[48px] bg-surface-container rounded-lg text-[17px] font-bold hover:bg-surface-container-high" onclick="pressKey('차')">차</button>
-          <button class="key-btn h-[48px] bg-surface-container rounded-lg text-[17px] font-bold hover:bg-surface-container-high" onclick="pressKey('카')">카</button>
-          <button class="key-btn h-[48px] bg-surface-container rounded-lg text-[17px] font-bold hover:bg-surface-container-high" onclick="pressKey('타')">타</button>
-          <button class="key-btn h-[48px] bg-surface-container rounded-lg text-[17px] font-bold hover:bg-surface-container-high" onclick="pressKey('파')">파</button>
-          <button class="key-btn h-[48px] bg-surface-container rounded-lg text-[17px] font-bold hover:bg-surface-container-high" onclick="pressKey('하')">하</button>
-          <button class="key-btn h-[48px] bg-surface-container-high rounded-lg text-[14px] font-bold hover:bg-surface-container-highest" onclick="toggleHangul()">숫자</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('가')">가</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('나')">나</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('다')">다</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('라')">라</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('마')">마</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('바')">바</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('사')">사</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('아')">아</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('자')">자</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('차')">차</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('카')">카</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('타')">타</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('파')">파</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('하')">하</button>
+          <button class="key-btn h-[44px] bg-surface-container-high rounded-lg text-[13px] font-bold hover:bg-surface-container-highest" onclick="toggleHangul()">숫자</button>
+        </div>
+        <!-- 지역명 (울산/서울 등 시도형 번호판 지원) -->
+        <div class="grid grid-cols-4 gap-1 mt-1">
+          <button class="key-btn h-[40px] bg-secondary-container rounded-lg text-[13px] font-bold hover:opacity-80" onclick="pressRegion('서울')">서울</button>
+          <button class="key-btn h-[40px] bg-secondary-container rounded-lg text-[13px] font-bold hover:opacity-80" onclick="pressRegion('울산')">울산</button>
+          <button class="key-btn h-[40px] bg-secondary-container rounded-lg text-[13px] font-bold hover:opacity-80" onclick="pressRegion('부산')">부산</button>
+          <button class="key-btn h-[40px] bg-secondary-container rounded-lg text-[13px] font-bold hover:opacity-80" onclick="pressRegion('경남')">경남</button>
         </div>
       </div>
     </div>
 
-    <!-- ── 로딩 인디케이터 ── -->
+    <!-- 로딩 -->
     <div id="loading-state" class="hidden flex items-center justify-center py-8 gap-3 text-on-surface-variant">
       <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
       <span class="text-body-xl">조회 중...</span>
     </div>
 
-    <!-- ── 빈 상태 (초기) ── -->
-    <div id="empty-state" class="flex flex-col items-center justify-center py-10 gap-3 text-on-surface-variant">
-      <span class="material-symbols-outlined text-[48px] opacity-30">search</span>
+    <!-- 빈 상태 -->
+    <div id="empty-state" class="flex flex-col items-center justify-center py-12 gap-3 text-on-surface-variant">
+      <span class="material-symbols-outlined text-[56px] opacity-30">search</span>
       <p class="text-sm text-center opacity-60">번호를 입력하고 확인을 누르세요</p>
     </div>
 
-    <!-- ── 검색 결과 영역 ── -->
-    <div id="result-area" class="space-y-4 hidden"></div>
+    <!-- 검색 결과 영역 — 화면의 메인 비중을 차지하도록 확대 -->
+    <div id="result-area" class="result-hero hidden"></div>
 
-    <!-- ── 최근 조회 기록 ── -->
-    <div id="recent-section" class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
-      <div class="px-5 py-4 border-b border-outline-variant flex justify-between items-center">
-        <h3 class="font-bold text-base">최근 조회 결과</h3>
-        <button onclick="clearHistory()" class="text-xs text-on-surface-variant hover:text-error transition-colors">전체 삭제</button>
-      </div>
-      <div id="history-list">
-        <!-- JS로 렌더링 -->
-        <div class="px-5 py-8 text-center text-on-surface-variant text-sm opacity-60" id="history-empty">
-          조회 기록이 없습니다
-        </div>
-      </div>
-    </div>
-
-    <!-- ── 데이터 기준일 ── -->
-    <p class="text-center text-xs text-on-surface-variant pb-2" id="data-date-footer">
-      데이터 기준일: —
-    </p>
+    <!-- 데이터 기준일 -->
+    <p class="text-center text-xs text-on-surface-variant pb-2" id="data-date-footer">데이터 기준일: —</p>
 
   </section>
   </div><!-- /page-search -->
 
-  <!-- ── 페이지: 조회 기록 ── -->
-  <div id="page-history" class="page-view hidden">
-    <section class="p-margin-mobile space-y-4 max-w-2xl mx-auto w-full">
-      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
-        <div class="px-5 py-4 border-b border-outline-variant flex justify-between items-center">
-          <h3 class="font-bold text-base">전체 조회 기록</h3>
-          <button onclick="clearHistory()" class="text-xs text-on-surface-variant hover:text-error transition-colors px-3 py-1 rounded-lg border border-outline-variant">전체 삭제</button>
-        </div>
-        <div id="history-list-full">
-          <div class="px-5 py-10 text-center text-on-surface-variant text-sm opacity-60">조회 기록이 없습니다</div>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <!-- ── 페이지: 방문 예약 ── -->
-  <div id="page-visit" class="page-view hidden">
-    <section class="p-margin-mobile space-y-4 max-w-2xl mx-auto w-full">
-      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 flex flex-col items-center gap-4 text-center shadow-sm">
-        <span class="material-symbols-outlined text-[48px] text-primary opacity-40">event_available</span>
-        <h3 class="font-headline-lg-mobile text-headline-lg-mobile font-bold">방문 예약</h3>
-        <p class="text-on-surface-variant text-sm">방문 차량 사전 등록 및 예약 관리 기능입니다.<br>추후 업데이트 예정입니다.</p>
-      </div>
-    </section>
-  </div>
-
-  <!-- ── 페이지: 블랙리스트 ── -->
-  <div id="page-blacklist" class="page-view hidden">
-    <section class="p-margin-mobile space-y-4 max-w-2xl mx-auto w-full">
-      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 flex flex-col items-center gap-4 text-center shadow-sm">
-        <span class="material-symbols-outlined text-[48px] text-error opacity-40">block</span>
-        <h3 class="font-headline-lg-mobile text-headline-lg-mobile font-bold">블랙리스트</h3>
-        <p class="text-on-surface-variant text-sm">진입 제한 차량 관리 및 알림 설정 기능입니다.<br>추후 업데이트 예정입니다.</p>
-      </div>
-    </section>
-  </div>
-
-  <!-- ── 페이지: 시스템 설정 ── -->
+  <!-- ══════════════════════════════════════════
+       페이지: 관리
+  ════════════════════════════════════════════ -->
   <div id="page-settings" class="page-view hidden">
     <section class="p-margin-mobile space-y-4 max-w-2xl mx-auto w-full">
 
-      <!-- 총 등록 차량 수 카드 -->
-      <div class="bg-primary p-6 rounded-xl text-on-primary shadow-sm">
-        <p class="text-sm opacity-80 mb-1">총 등록 차량 수</p>
-        <p class="text-[40px] font-extrabold leading-none" id="settings-total">—</p>
-        <p class="text-sm opacity-70 mt-2" id="settings-date">데이터 기준일: —</p>
-      </div>
-
-      <!-- 엑셀 업로드 영역 -->
-      <div id="upload-drop-zone"
-           class="border-2 border-dashed border-outline-variant rounded-xl p-6 flex flex-col items-center gap-3 text-center cursor-pointer hover:border-primary hover:bg-primary-fixed transition-all active:scale-[0.98]"
-           onclick="document.getElementById('excel-file-input').click()"
-           ondragover="event.preventDefault(); this.classList.add('border-primary','bg-primary-fixed')"
-           ondragleave="this.classList.remove('border-primary','bg-primary-fixed')"
-           ondrop="handleFileDrop(event)">
-        <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileSelect(this)"/>
-        <span class="material-symbols-outlined text-[40px] text-primary opacity-60">upload_file</span>
+      <!-- 관리자 로그인 게이트 -->
+      <div id="admin-gate" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col items-center gap-4 text-center shadow-sm">
+        <span class="material-symbols-outlined text-[40px] text-primary opacity-60">lock</span>
         <div>
-          <p class="font-bold text-base">엑셀 업로드</p>
-          <p class="text-sm text-on-surface-variant mt-1">A열: 차량번호 &nbsp;|&nbsp; B열: 차종<br>1행부터 바로 데이터 입력 (헤더 불필요)</p>
+          <p class="font-bold text-base">관리자 인증</p>
+          <p class="text-sm text-on-surface-variant mt-1">엑셀 업로드 및 데이터 관리는<br>관리자 비밀번호가 필요합니다.</p>
         </div>
-        <span class="text-xs text-on-surface-variant">.xlsx · .xls · .csv 지원</span>
+        <input type="password" id="admin-password-input" placeholder="비밀번호 입력"
+               class="w-full max-w-xs border border-outline-variant rounded-lg px-4 py-3 text-center text-lg tracking-widest focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+               onkeydown="if(event.key==='Enter') tryAdminLogin()"/>
+        <button onclick="tryAdminLogin()" class="w-full max-w-xs h-touch-target bg-primary-container text-on-primary rounded-lg font-bold hover:opacity-90 active:scale-95 transition-all">로그인</button>
+        <p id="admin-login-error" class="text-xs text-error hidden">비밀번호가 올바르지 않습니다</p>
       </div>
 
-      <!-- 업로드 진행/결과 상태 (기본 hidden) -->
-      <div id="upload-status-box" class="hidden rounded-xl overflow-hidden border border-outline-variant shadow-sm">
-        <div id="upload-status-header" class="flex items-center justify-between px-5 py-3">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined" id="upload-status-icon">hourglass_top</span>
-            <span class="font-bold text-sm" id="upload-status-title">처리 중...</span>
-          </div>
-          <button onclick="resetUploadStatus()" class="text-xs opacity-60 hover:opacity-100">닫기</button>
-        </div>
-        <div class="px-5 py-4 bg-surface-container-lowest text-sm" id="upload-status-body"></div>
-      </div>
+      <!-- 관리자 화면 (인증 후 표시) -->
+      <div id="admin-panel" class="hidden space-y-4">
 
-      <!-- 설정 메뉴 -->
-      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm divide-y divide-outline-variant">
-        <div class="flex items-center justify-between px-5 py-4 hover:bg-surface-container-low transition-colors cursor-pointer">
-          <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary">dark_mode</span>
-            <span class="font-medium">야간 모드</span>
+        <!-- 총 등록 차량 수 카드 -->
+        <div class="bg-primary p-6 rounded-xl text-on-primary shadow-sm">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-sm opacity-80 mb-1">총 등록 차량 수</p>
+              <p class="text-[40px] font-extrabold leading-none" id="settings-total">—</p>
+              <p class="text-sm opacity-70 mt-2" id="settings-date">데이터 기준일: —</p>
+            </div>
+            <button onclick="logoutAdmin()" class="text-xs bg-white/15 hover:bg-white/25 transition-colors px-3 py-1.5 rounded-lg">로그아웃</button>
           </div>
-          <button onclick="toggleNightMode(this)" class="relative w-12 h-6 bg-outline rounded-full transition-colors duration-200" id="night-mode-toggle">
-            <span class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200" id="night-mode-knob"></span>
-          </button>
         </div>
-        <div class="flex items-center justify-between px-5 py-4 hover:bg-surface-container-low transition-colors cursor-pointer">
-          <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary">vibration</span>
-            <span class="font-medium">햅틱 피드백</span>
-          </div>
-          <button onclick="toggleHapticSetting(this)" class="relative w-12 h-6 bg-primary-container rounded-full transition-colors duration-200" id="haptic-toggle">
-            <span class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 translate-x-6" id="haptic-knob"></span>
-          </button>
-        </div>
-      </div>
 
-      <p class="text-center text-xs text-on-surface-variant">Danji Pass v1.0.0</p>
+        <!-- 동기화 상태 -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl px-5 py-3 flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-2 text-sm">
+            <span class="material-symbols-outlined text-[18px] text-status-success">cloud_done</span>
+            <span id="sync-status-text">Firestore 동기화됨 · 모든 기기에 실시간 반영</span>
+          </div>
+        </div>
+
+        <!-- 엑셀 업로드 영역 -->
+        <div id="upload-drop-zone"
+             class="border-2 border-dashed border-outline-variant rounded-xl p-6 flex flex-col items-center gap-3 text-center cursor-pointer hover:border-primary hover:bg-primary-fixed transition-all active:scale-[0.98]"
+             onclick="document.getElementById('excel-file-input').click()"
+             ondragover="event.preventDefault(); this.classList.add('border-primary','bg-primary-fixed')"
+             ondragleave="this.classList.remove('border-primary','bg-primary-fixed')"
+             ondrop="handleFileDrop(event)">
+          <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileSelect(this)"/>
+          <span class="material-symbols-outlined text-[40px] text-primary opacity-60">upload_file</span>
+          <div>
+            <p class="font-bold text-base">엑셀 업로드</p>
+            <p class="text-sm text-on-surface-variant mt-1">A열: 차량번호 &nbsp;|&nbsp; B열: 차종 &nbsp;|&nbsp; C열: 등록대장 페이지<br>1행부터 바로 데이터 입력 (헤더 불필요)</p>
+          </div>
+          <span class="text-xs text-on-surface-variant">.xlsx · .xls · .csv 지원</span>
+        </div>
+
+        <!-- 업로드 진행/결과 상태 -->
+        <div id="upload-status-box" class="hidden rounded-xl overflow-hidden border border-outline-variant shadow-sm">
+          <div id="upload-status-header" class="flex items-center justify-between px-5 py-3">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined" id="upload-status-icon">hourglass_top</span>
+              <span class="font-bold text-sm" id="upload-status-title">처리 중...</span>
+            </div>
+            <button onclick="resetUploadStatus()" class="text-xs opacity-60 hover:opacity-100">닫기</button>
+          </div>
+          <div class="px-5 py-4 bg-surface-container-lowest text-sm" id="upload-status-body"></div>
+        </div>
+
+        <!-- (원본 파일 다운로드 기능은 현재 비활성 — Firebase Storage 미사용) -->
+
+        <!-- 설정 메뉴 -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm divide-y divide-outline-variant">
+          <div class="flex items-center justify-between px-5 py-4 hover:bg-surface-container-low transition-colors cursor-pointer">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-primary">dark_mode</span>
+              <span class="font-medium">야간 모드</span>
+            </div>
+            <button onclick="toggleNightMode(this)" class="relative w-12 h-6 bg-outline rounded-full transition-colors duration-200" id="night-mode-toggle">
+              <span class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200" id="night-mode-knob"></span>
+            </button>
+          </div>
+          <div class="flex items-center justify-between px-5 py-4 hover:bg-surface-container-low transition-colors cursor-pointer">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-primary">vibration</span>
+              <span class="font-medium">햅틱 피드백</span>
+            </div>
+            <button onclick="toggleHapticSetting(this)" class="relative w-12 h-6 bg-primary-container rounded-full transition-colors duration-200" id="haptic-toggle">
+              <span class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 translate-x-6" id="haptic-knob"></span>
+            </button>
+          </div>
+        </div>
+
+        <p class="text-center text-xs text-on-surface-variant">Danji Pass v1.1.0</p>
+      </div>
     </section>
-  </div>
+  </div><!-- /page-settings -->
 
 </main>
 
 <!-- ══════════════════════════════════════════
-     하단 탭 바 — 5개 메뉴 (전체 화면 공통)
+     하단 탭 바 — 조회 / 관리 2탭
 ════════════════════════════════════════════ -->
 <nav class="fixed bottom-0 left-0 w-full flex justify-around items-end h-[68px] px-2 pb-2 bg-surface border-t border-outline-variant shadow-[0_-2px_12px_rgba(0,0,0,0.07)] z-50">
-
-  <!-- 차량 조회 -->
   <button class="nav-tab flex flex-col items-center justify-center gap-0.5 flex-1 h-full active-tab"
           data-page="search" data-title="차량 조회"
           onclick="switchPage('search', '차량 조회', this)">
     <span class="nav-icon material-symbols-outlined text-[24px]">directions_car</span>
     <span class="nav-label text-[10px] font-bold">조회</span>
   </button>
-
-  <!-- 조회 기록 -->
   <button class="nav-tab flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-on-surface-variant"
-          data-page="history" data-title="조회 기록"
-          onclick="switchPage('history', '조회 기록', this)">
-    <span class="nav-icon material-symbols-outlined text-[24px]">history</span>
-    <span class="nav-label text-[10px] font-medium">기록</span>
+          data-page="settings" data-title="관리"
+          onclick="switchPage('settings', '관리', this)">
+    <span class="nav-icon material-symbols-outlined text-[24px]">admin_panel_settings</span>
+    <span class="nav-label text-[10px] font-medium">관리</span>
   </button>
-
-  <!-- 방문 예약 -->
-  <button class="nav-tab flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-on-surface-variant"
-          data-page="visit" data-title="방문 예약"
-          onclick="switchPage('visit', '방문 예약', this)">
-    <span class="nav-icon material-symbols-outlined text-[24px]">event_available</span>
-    <span class="nav-label text-[10px] font-medium">예약</span>
-  </button>
-
-  <!-- 블랙리스트 -->
-  <button class="nav-tab flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-on-surface-variant"
-          data-page="blacklist" data-title="블랙리스트"
-          onclick="switchPage('blacklist', '블랙리스트', this)">
-    <span class="nav-icon material-symbols-outlined text-[24px]">block</span>
-    <span class="nav-label text-[10px] font-medium">차단</span>
-  </button>
-
-  <!-- 시스템 설정 -->
-  <button class="nav-tab flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-on-surface-variant"
-          data-page="settings" data-title="시스템 설정"
-          onclick="switchPage('settings', '시스템 설정', this)">
-    <span class="nav-icon material-symbols-outlined text-[24px]">settings</span>
-    <span class="nav-label text-[10px] font-medium">설정</span>
-  </button>
-
 </nav>
 
-<!-- ══════════════════════════════════════════
-     회차처리 확인 다이얼로그
-════════════════════════════════════════════ -->
+<!-- 회차처리 확인 다이얼로그 -->
 <div class="fixed inset-0 bg-black/50 hidden z-[100] flex items-center justify-center p-6" id="eviction-modal">
   <div class="bg-surface-container-lowest w-full max-w-sm rounded-2xl p-8 shadow-2xl">
     <div class="flex flex-col items-center text-center space-y-3">
@@ -548,93 +436,228 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     토스트 알림
-════════════════════════════════════════════ -->
+<!-- 토스트 -->
 <div id="toast" class="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 z-[150] hidden">
   <div class="bg-inverse-surface text-inverse-on-surface px-5 py-3 rounded-full shadow-xl text-sm font-bold whitespace-nowrap" id="toast-msg"></div>
 </div>
 
 <!-- ══════════════════════════════════════════
-     JavaScript — 로직 및 Mock 데이터
+     Firebase 모듈 (Firestore + Analytics)
+════════════════════════════════════════════ -->
+<script type="module">
+  import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAnalytics }    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey:            "AIzaSyB2f0W3y00_QrEPJ1e0cCTLKSfk49wvYaQ",
+    authDomain:        "danji-pass.firebaseapp.com",
+    projectId:         "danji-pass",
+    storageBucket:     "danji-pass.firebasestorage.app",
+    messagingSenderId: "364683733389",
+    appId:             "1:364683733389:web:8d6edbacb3202606b6b5c4",
+    measurementId:     "G-SKP00Y2CF3"
+  };
+
+  const app       = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db        = getFirestore(app);
+
+  // 전역으로 노출 (기존 vanilla JS 섹션에서 사용)
+  window.__firebase = { db, doc, getDoc, setDoc, onSnapshot, serverTimestamp };
+
+  console.log("[Danji Pass] Firebase 연결 완료");
+
+  // Firestore 실시간 구독 시작 (DOM 로드 후)
+  window.addEventListener("DOMContentLoaded", () => {
+    if (window.initFirestoreSync) window.initFirestoreSync();
+  });
+</script>
+
+<!-- ══════════════════════════════════════════
+     JavaScript — 메인 로직
 ════════════════════════════════════════════ -->
 <script>
   /* ─────────────────────────────────────────
-     Mock 데이터 (JSON 파일 연동 구조와 동일한 스키마)
-     실제 연동 시: fetch('vehicles.json').then(r=>r.json()).then(d=>{ DB=d.vehicles; ... })
-     _1/ 엑셀 업로드 데이터와 동일한 필드 구조 사용
+     기본 DB (Firestore 연결 전 임시 / 폴백용)
   ───────────────────────────────────────── */
   const MOCK_DB = {
-    meta: {
-      dataDate: "2024년 5월 28일",
-      total: 1284,
-      lastUpdated: "2024-05-28T09:00:00"
-    },
+    meta: { dataDate: "—", total: 0, lastUpdated: null },
     vehicles: [
-      // 입주민 차량
-      { id: "V001", plateNumber: "12가3456",  type: "resident", model: "쏘렌토"  },
-      { id: "V002", plateNumber: "34나5678",  type: "resident", model: "아반떼"  },
-      { id: "V003", plateNumber: "56다7890",  type: "resident", model: "K5"      },
-      { id: "V004", plateNumber: "11가2222",  type: "resident", model: "스타렉스" },
-      { id: "V005", plateNumber: "33나4444",  type: "resident", model: "카니발"  },
-      // 확인필요 (동일 뒤4자리 다수)
-      { id: "V006", plateNumber: "346저2762", type: "resident", model: "쏘렌토"  },
-      { id: "V007", plateNumber: "123가2762", type: "resident", model: "스포티지" },
+      { id: "V001", plateNumber: "12가3456",  type: "resident", model: "쏘렌토",  page: "" },
+      { id: "V002", plateNumber: "34나5678",  type: "resident", model: "아반떼",  page: "" },
+      { id: "V003", plateNumber: "56다7890",  type: "resident", model: "K5",      page: "" },
+      { id: "V004", plateNumber: "울산31무5224", type: "resident", model: "스타렉스", page: "" },
+      { id: "V005", plateNumber: "울산12바7811", type: "resident", model: "카니발",  page: "" },
+      { id: "V006", plateNumber: "346저2762", type: "resident", model: "쏘렌토",  page: "" },
+      { id: "V007", plateNumber: "123가2762", type: "resident", model: "스포티지", page: "" },
     ]
   };
 
-  /* ─────────────────────────────────────────
-     상태 변수
-  ───────────────────────────────────────── */
-  let inputBuffer  = "";       // 현재 입력값
-  let searchMode   = "last4";  // "last4" | "full"
-  let isHangulMode = false;    // 전체번호 모드에서 한글 입력 여부
-  let searchHistory = [];      // 조회 기록 (sessionStorage 기반)
-  let evictionTarget = null;   // 회차처리 대상 차량
+  const ADMIN_PASSWORD = "danji2024"; // 관리자 비밀번호 — 운영 시 변경 권장
+
+  let inputBuffer    = "";
+  let searchMode      = "last4";
+  let isHangulMode    = false;
+  let evictionTarget  = null;
+  let isAdminLoggedIn = false;
+  let lastOriginalFile = null; // 현재 미사용 (Storage 비활성) — 추후 업그레이드 시 재활성 가능
 
   const MAX_LEN_LAST4 = 4;
-  const MAX_LEN_FULL  = 9;  // 예: "123가4567" (최대 9자)
+  const MAX_LEN_FULL  = 12; // "울산31무5224" 등 지역명 포함 최대 길이
 
   /* ─────────────────────────────────────────
      초기화
   ───────────────────────────────────────── */
   (function init() {
-    // 메타 정보 표시
-    const { dataDate, total } = MOCK_DB.meta;
-    document.getElementById("data-date-footer").textContent = `데이터 기준일: ${dataDate}`;
-    document.getElementById("header-data-date").textContent = dataDate;
-
-    // 설정 탭 데이터
-    document.getElementById("settings-total").textContent = total.toLocaleString() + "대";
-    document.getElementById("settings-date").textContent = `데이터 기준일: ${dataDate}`;
-
-    // 세션 기록 복원
-    try {
-      const saved = sessionStorage.getItem("searchHistory");
-      if (saved) searchHistory = JSON.parse(saved);
-      renderHistory();
-    } catch(e) {}
-
+    refreshMetaUI();
     updateDisplay();
+
+    // 관리자 로그인 세션 유지 (sessionStorage)
+    try {
+      if (sessionStorage.getItem("adminLoggedIn") === "1") {
+        isAdminLoggedIn = true;
+        showAdminPanel();
+      }
+    } catch(e) {}
   })();
+
+  /* ─────────────────────────────────────────
+     Firestore 실시간 동기화
+     문서 구조: danjiPass/vehicleData
+       { vehicles: [...], meta: {...}, originalFile: {...} }
+  ───────────────────────────────────────── */
+  window.initFirestoreSync = function () {
+    const { db, doc, onSnapshot } = window.__firebase;
+    const ref = doc(db, "danjiPass", "vehicleData");
+
+    setSyncIndicator("syncing");
+
+    onSnapshot(ref, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (Array.isArray(data.vehicles)) MOCK_DB.vehicles = data.vehicles;
+        if (data.meta) MOCK_DB.meta = data.meta;
+        if (data.originalFile) lastOriginalFile = data.originalFile;
+        refreshMetaUI();
+        renderDownloadBox();
+        setSyncIndicator("done");
+      } else {
+        setSyncIndicator("done");
+      }
+    }, (err) => {
+      console.warn("[Danji Pass] Firestore 구독 실패:", err);
+      setSyncIndicator("error");
+    });
+  };
+
+  function setSyncIndicator(state) {
+    const el = document.getElementById("sync-indicator");
+    const statusText = document.getElementById("sync-status-text");
+    if (!el) return;
+    if (state === "syncing") {
+      el.textContent = "cloud_sync";
+      el.classList.add("animate-pulse");
+      if (statusText) statusText.textContent = "Firestore 동기화 중...";
+    } else if (state === "done") {
+      el.textContent = "cloud_done";
+      el.classList.remove("animate-pulse");
+      if (statusText) statusText.textContent = "Firestore 동기화됨 · 모든 기기에 실시간 반영";
+    } else if (state === "error") {
+      el.textContent = "cloud_off";
+      el.classList.remove("animate-pulse");
+      if (statusText) statusText.textContent = "동기화 실패 — 네트워크를 확인해주세요";
+    }
+  }
+
+  async function saveToFirestore() {
+    try {
+      const { db, doc, setDoc, serverTimestamp } = window.__firebase;
+      const ref = doc(db, "danjiPass", "vehicleData");
+      await setDoc(ref, {
+        vehicles: MOCK_DB.vehicles,
+        meta: MOCK_DB.meta,
+        originalFile: lastOriginalFile,
+        updatedAt: serverTimestamp()
+      });
+      return true;
+    } catch (err) {
+      console.error("[Danji Pass] Firestore 저장 실패:", err);
+      showToast("⚠ 서버 저장 실패 — 네트워크를 확인해주세요");
+      return false;
+    }
+  }
+
+  /* ─────────────────────────────────────────
+     관리자 인증
+  ───────────────────────────────────────── */
+  function tryAdminLogin() {
+    const input = document.getElementById("admin-password-input");
+    const errEl = document.getElementById("admin-login-error");
+    if (input.value === ADMIN_PASSWORD) {
+      isAdminLoggedIn = true;
+      try { sessionStorage.setItem("adminLoggedIn", "1"); } catch(e) {}
+      input.value = "";
+      errEl.classList.add("hidden");
+      showAdminPanel();
+      haptic(40);
+    } else {
+      errEl.classList.remove("hidden");
+      input.value = "";
+      input.focus();
+      haptic(80);
+    }
+  }
+
+  function showAdminPanel() {
+    document.getElementById("admin-gate").classList.add("hidden");
+    document.getElementById("admin-panel").classList.remove("hidden");
+    renderDownloadBox();
+  }
+
+  function logoutAdmin() {
+    isAdminLoggedIn = false;
+    try { sessionStorage.removeItem("adminLoggedIn"); } catch(e) {}
+    document.getElementById("admin-gate").classList.remove("hidden");
+    document.getElementById("admin-panel").classList.add("hidden");
+    haptic();
+  }
 
   /* ─────────────────────────────────────────
      키패드 이벤트
   ───────────────────────────────────────── */
   function pressKey(char) {
     haptic();
+
+    // 결과가 이미 표시된 상태에서 새 숫자 입력 시 자동 초기화 후 새 검색 시작 (요청 #6)
+    if (!document.getElementById("result-area").classList.contains("hidden") && /[0-9]/.test(char)) {
+      inputBuffer = "";
+      clearResultsOnly();
+    }
+
     const maxLen = searchMode === "last4" ? MAX_LEN_LAST4 : MAX_LEN_FULL;
     if (inputBuffer.length >= maxLen) return;
-
-    // 뒤4자리 모드: 숫자만 허용
     if (searchMode === "last4" && !/[0-9]/.test(char)) return;
 
     inputBuffer += char;
     updateDisplay();
 
-    // 4자리 모드: 4자리 완성 시 자동 검색
     if (searchMode === "last4" && inputBuffer.length === MAX_LEN_LAST4) {
       setTimeout(doSearch, 120);
+    }
+  }
+
+  function pressRegion(region) {
+    haptic();
+    if (!document.getElementById("result-area").classList.contains("hidden")) {
+      inputBuffer = "";
+      clearResultsOnly();
+    }
+    if (inputBuffer.length === 0) {
+      inputBuffer = region;
+      updateDisplay();
     }
   }
 
@@ -642,14 +665,14 @@
     haptic();
     inputBuffer = inputBuffer.slice(0, -1);
     updateDisplay();
-    clearResults();
+    clearResultsOnly();
   }
 
   function clearAll() {
     haptic();
     inputBuffer = "";
     updateDisplay();
-    clearResults();
+    clearResultsOnly();
   }
 
   /* ─────────────────────────────────────────
@@ -661,7 +684,6 @@
     const maxLen = searchMode === "last4" ? MAX_LEN_LAST4 : MAX_LEN_FULL;
 
     if (inputBuffer.length === 0) {
-      // 플레이스홀더
       el.textContent = searchMode === "last4" ? "0000" : "00가0000";
       el.className = "text-on-surface-variant";
       box.classList.remove("border-primary");
@@ -673,7 +695,6 @@
       box.classList.remove("border-outline-variant");
     }
 
-    // plate-cursor 클래스: 입력 중일 때만 커서 표시
     const displayEl = document.getElementById("plate-display");
     if (inputBuffer.length > 0 && inputBuffer.length < maxLen) {
       displayEl.classList.add("plate-cursor");
@@ -690,25 +711,17 @@
     inputBuffer = "";
     isHangulMode = false;
 
-    // 탭 스타일
     document.querySelectorAll(".mode-tab").forEach(t => {
       t.classList.toggle("active", t.dataset.mode === mode);
-      if (t.dataset.mode !== mode) {
-        t.classList.add("text-on-surface-variant");
-        t.classList.remove("text-white");
-      } else {
-        t.classList.remove("text-on-surface-variant");
-      }
+      t.classList.toggle("text-on-surface-variant", t.dataset.mode !== mode);
     });
 
-    // 라벨
     document.getElementById("input-label").textContent =
       mode === "last4" ? "차량번호 뒤 4자리 입력" : "차량번호 전체 입력";
 
-    // 한글 패드 & 버튼 표시 제어
-    const hangulBtn      = document.getElementById("btn-hangul");
-    const backspaceBtn   = document.getElementById("btn-backspace");
-    const hangulPad      = document.getElementById("hangul-pad");
+    const hangulBtn    = document.getElementById("btn-hangul");
+    const backspaceBtn = document.getElementById("btn-backspace");
+    const hangulPad     = document.getElementById("hangul-pad");
 
     if (mode === "full") {
       hangulBtn.classList.remove("hidden");
@@ -720,7 +733,7 @@
       hangulPad.classList.add("hidden");
     }
 
-    clearResults();
+    clearResultsOnly();
     updateDisplay();
     haptic();
   }
@@ -729,8 +742,7 @@
     isHangulMode = !isHangulMode;
     document.getElementById("hangul-pad").classList.toggle("hidden", !isHangulMode);
     document.getElementById("btn-hangul").textContent = isHangulMode ? "숫자" : "가";
-    // 전체번호 모드에서 한글 토글 시 백스페이스도 표시
-    document.getElementById("btn-backspace").classList.toggle("hidden", false);
+    document.getElementById("btn-backspace").classList.remove("hidden");
     haptic();
   }
 
@@ -745,21 +757,19 @@
 
     haptic();
     showLoading(true);
-    clearResults();
 
-    // 실제 연동 시 여기서 fetch() 호출
-    // fetch(`/api/vehicles/search?q=${inputBuffer}&mode=${searchMode}`)
-    //   .then(r => r.json()).then(renderResults)
     setTimeout(() => {
       const results = searchVehicles(inputBuffer, searchMode);
       showLoading(false);
       renderResults(results);
-      addToHistory(inputBuffer, results);
-    }, 300); // 실제 API 지연 시뮬레이션
+    }, 250);
   }
 
   /* ─────────────────────────────────────────
-     차량 조회 로직 (JSON DB 조회)
+     차량 조회 로직
+     - 뒤 4자리: 숫자만 추출 후 끝 4자리 일치
+     - 전체번호: 공백/지역명 무시하고 부분 포함 일치
+       (예: "울산31무5224" 입력 시에도, "31무5224"만 입력해도 매칭)
   ───────────────────────────────────────── */
   function searchVehicles(query, mode) {
     const q = query.trim();
@@ -768,17 +778,19 @@
         v.plateNumber.replace(/[^0-9]/g, "").slice(-4) === q
       );
     } else {
-      return MOCK_DB.vehicles.filter(v =>
-        v.plateNumber.replace(/\s/g, "").includes(q.replace(/\s/g, ""))
-      );
+      const qNorm = q.replace(/\s/g, "");
+      return MOCK_DB.vehicles.filter(v => {
+        const plateNorm = v.plateNumber.replace(/\s/g, "");
+        return plateNorm.includes(qNorm) || qNorm.includes(plateNorm);
+      });
     }
   }
 
   /* ─────────────────────────────────────────
-     결과 렌더링
+     결과 렌더링 (대형 카드 — 화면 메인 비중)
   ───────────────────────────────────────── */
   function renderResults(vehicles) {
-    const area = document.getElementById("result-area");
+    const area  = document.getElementById("result-area");
     const empty = document.getElementById("empty-state");
     const border = document.getElementById("screen-border");
 
@@ -786,15 +798,12 @@
     border.className = "";
 
     if (vehicles.length === 0) {
-      // 미등록 차량
       area.innerHTML = buildUnknownCard(inputBuffer);
       border.classList.add("border-fail");
     } else if (vehicles.length === 1) {
-      // 단일 결과 — 입주민 확정
       area.innerHTML = buildResidentCard(vehicles[0]);
       border.classList.add("border-ok");
     } else {
-      // 다수 결과 — 확인 필요
       area.innerHTML = buildMultiCard(vehicles);
       border.classList.add("border-warn");
     }
@@ -802,154 +811,85 @@
     area.classList.remove("hidden");
     empty.classList.add("hidden");
 
-    // 테두리 3초 후 자동 해제
     setTimeout(() => { border.className = ""; }, 3000);
   }
 
   function buildResidentCard(v) {
+    const pageInfo = v.page ? `
+          <div class="flex items-center gap-2 mt-3 pt-3 border-t border-outline-variant">
+            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">menu_book</span>
+            <span class="text-xs text-on-surface-variant">등록대장 페이지</span>
+            <strong class="text-sm">${v.page}p</strong>
+          </div>` : "";
     return `
-      <div class="result-card rounded-xl overflow-hidden shadow-md border border-outline-variant">
-        <div class="flex items-center justify-between px-5 py-3" style="background:#1d8102;">
-          <span class="text-white font-bold text-base">입주민 차량</span>
-          <span class="material-symbols-outlined text-white" style="font-variation-settings:'FILL' 1;">check_circle</span>
+      <div class="result-card rounded-2xl overflow-hidden shadow-lg border border-outline-variant h-full flex flex-col">
+        <div class="flex items-center justify-between px-6 py-5" style="background:#1d8102;">
+          <span class="text-white font-bold text-xl">입주민 차량입니다</span>
+          <span class="material-symbols-outlined text-white text-[32px]" style="font-variation-settings:'FILL' 1;">check_circle</span>
         </div>
-        <div class="bg-surface-container-lowest px-5 py-5">
-          <p class="text-xs text-on-surface-variant mb-1">차량 번호</p>
-          <p class="font-bold text-[32px] leading-tight text-primary mb-3"
-             style="font-family:'JetBrains Mono',monospace; letter-spacing:0.08em;"
+        <div class="bg-surface-container-lowest px-6 py-8 flex-1 flex flex-col justify-center">
+          <p class="text-sm text-on-surface-variant mb-2">차량 번호</p>
+          <p class="font-bold text-[56px] leading-tight text-primary mb-4"
+             style="font-family:'JetBrains Mono',monospace; letter-spacing:0.06em;"
           >${v.plateNumber}</p>
-          <div class="flex items-center gap-2 mt-1">
-            <span class="text-on-surface-variant text-sm">차량 모델</span>
-            <strong class="text-sm">${v.model}</strong>
+          <div class="flex items-center gap-2">
+            <span class="text-on-surface-variant text-base">차량 모델</span>
+            <strong class="text-lg">${v.model}</strong>
           </div>
+          ${pageInfo}
         </div>
       </div>`;
   }
 
   function buildUnknownCard(query) {
     return `
-      <div class="result-card rounded-xl overflow-hidden shadow-md border border-outline-variant">
-        <div class="flex items-center justify-between px-5 py-3" style="background:#d32f2f;">
-          <span class="text-white font-bold text-base">미등록 차량</span>
-          <span class="material-symbols-outlined text-white" style="font-variation-settings:'FILL' 1;">warning</span>
+      <div class="result-card rounded-2xl overflow-hidden shadow-lg border border-outline-variant h-full flex flex-col">
+        <div class="flex items-center justify-between px-6 py-5" style="background:#d32f2f;">
+          <span class="text-white font-bold text-xl">미등록 차량입니다</span>
+          <span class="material-symbols-outlined text-white text-[32px]" style="font-variation-settings:'FILL' 1;">warning</span>
         </div>
-        <div class="bg-surface-container-lowest px-5 py-5">
-          <p class="text-xs text-on-surface-variant mb-1">입력 번호</p>
-          <div class="flex items-start justify-between">
-            <div>
-              <p class="font-bold text-[32px] leading-tight text-error mb-1"
-                 style="font-family:'JetBrains Mono',monospace; letter-spacing:0.08em;"
-              >${query}</p>
-              <span class="inline-block px-3 py-1 bg-error-container text-on-error-container rounded-full text-xs font-bold">미확인 차량</span>
-            </div>
-            <button
-              onclick="openEvictionModal('${query}', '미등록')"
-              class="ml-4 px-4 h-touch-target bg-error text-on-error rounded-lg font-bold text-sm hover:opacity-90 active:scale-95 transition-all flex-shrink-0"
-            >회차<br>처리</button>
+        <div class="bg-surface-container-lowest px-6 py-8 flex-1 flex flex-col justify-center">
+          <p class="text-sm text-on-surface-variant mb-2">입력 번호</p>
+          <div class="flex items-start justify-between gap-4">
+            <p class="font-bold text-[48px] leading-tight text-error"
+               style="font-family:'JetBrains Mono',monospace; letter-spacing:0.06em;"
+            >${query}</p>
+            <button onclick="openEvictionModal('${query}', '미등록')"
+              class="px-5 h-touch-target bg-error text-on-error rounded-lg font-bold text-sm hover:opacity-90 active:scale-95 transition-all flex-shrink-0"
+            >회차 처리</button>
           </div>
-          <p class="text-xs text-on-surface-variant mt-3">등록된 차량 정보가 없습니다. 방문 예약 탭을 확인하거나 회차 처리하세요.</p>
+          <span class="inline-block mt-3 px-3 py-1 bg-error-container text-on-error-container rounded-full text-xs font-bold w-fit">미확인 차량</span>
+          <p class="text-sm text-on-surface-variant mt-4">등록된 차량 정보가 없습니다. 회차 처리하거나 입구 직원에게 안내해주세요.</p>
         </div>
       </div>`;
   }
 
   function buildMultiCard(vehicles) {
     const rows = vehicles.map(v => `
-      <div class="vehicle-row px-4 py-3 flex justify-between items-center border-b border-outline-variant last:border-0 rounded-lg"
+      <div class="vehicle-row px-4 py-4 flex justify-between items-center border-b border-outline-variant last:border-0"
            onclick="quickSearch('${v.plateNumber}')">
-        <div>
-        <span class="font-bold text-sm" style="font-family:'JetBrains Mono',monospace;">${v.plateNumber}</span>
-        </div>
+        <span class="font-bold text-base" style="font-family:'JetBrains Mono',monospace;">${v.plateNumber}</span>
         <span class="text-sm font-medium text-primary">${v.model}</span>
       </div>`).join("");
 
     return `
-      <div class="result-card rounded-xl overflow-hidden shadow-md border border-outline-variant">
-        <div class="flex items-center justify-between px-5 py-3" style="background:#e3b000;">
-          <span class="text-on-surface font-bold text-base">차량 번호 확인 필요</span>
-          <span class="material-symbols-outlined text-on-surface" style="font-variation-settings:'FILL' 1;">info</span>
+      <div class="result-card rounded-2xl overflow-hidden shadow-lg border border-outline-variant h-full flex flex-col">
+        <div class="flex items-center justify-between px-6 py-5" style="background:#e3b000;">
+          <span class="text-on-surface font-bold text-xl">차량 번호 확인 필요</span>
+          <span class="material-symbols-outlined text-on-surface text-[32px]" style="font-variation-settings:'FILL' 1;">info</span>
         </div>
-        <div class="bg-surface-container-lowest px-4 py-2">
-          <p class="text-xs text-on-surface-variant px-1 py-2">동일 번호 ${vehicles.length}건 조회됨 — 차량을 선택하면 상세 조회됩니다</p>
+        <div class="bg-surface-container-lowest px-4 py-2 flex-1">
+          <p class="text-sm text-on-surface-variant px-2 py-3">동일 번호 ${vehicles.length}건 조회됨 — 차량을 선택하면 상세 조회됩니다</p>
           ${rows}
         </div>
       </div>`;
   }
 
-  /* ─────────────────────────────────────────
-     확인필요 → 빠른 전체번호 검색
-  ───────────────────────────────────────── */
   function quickSearch(plateNumber) {
     switchMode("full");
     inputBuffer = plateNumber;
     updateDisplay();
     setTimeout(doSearch, 100);
-  }
-
-  /* ─────────────────────────────────────────
-     조회 기록
-  ───────────────────────────────────────── */
-  function addToHistory(query, results) {
-    const status = results.length === 0 ? "미등록"
-                 : results.length === 1 ? "입주민"
-                 : "확인필요";
-    const colors = { "입주민": "#1d8102", "미등록": "#d32f2f", "확인필요": "#b37800" };
-
-    searchHistory.unshift({
-      query,
-      status,
-      color: colors[status],
-      model: results.length === 1 ? results[0].model : (results.length > 1 ? `${results.length}건` : "—"),
-      time: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
-    });
-
-    // 최대 10건만 유지
-    if (searchHistory.length > 10) searchHistory.pop();
-
-    try { sessionStorage.setItem("searchHistory", JSON.stringify(searchHistory)); } catch(e) {}
-    renderHistory();
-  }
-
-  function renderHistory() {
-    const list  = document.getElementById("history-list");
-    const empty = document.getElementById("history-empty");
-
-    if (searchHistory.length === 0) {
-      empty.classList.remove("hidden");
-      return;
-    }
-    empty.classList.add("hidden");
-
-    list.innerHTML = searchHistory.map((h, i) => `
-      <div class="zebra-row flex items-center justify-between px-5 py-3 cursor-pointer hover:bg-surface-container-low transition-colors"
-           onclick="replaySearch('${h.query}')">
-        <div class="flex items-center gap-3">
-          <span class="font-bold text-sm" style="font-family:'JetBrains Mono',monospace;">${h.query}</span>
-          <span class="px-2 py-0.5 rounded-full text-xs font-bold text-white" style="background:${h.color};">${h.status}</span>
-        </div>
-        <div class="flex items-center gap-2 text-xs text-on-surface-variant">
-          <span>${h.model}</span>
-          <span>${h.time}</span>
-        </div>
-      </div>`).join("");
-  }
-
-  function replaySearch(query) {
-    // 길이에 따라 모드 자동 선택
-    if (/^\d{4}$/.test(query)) {
-      switchMode("last4");
-    } else {
-      switchMode("full");
-    }
-    inputBuffer = query;
-    updateDisplay();
-    setTimeout(doSearch, 100);
-  }
-
-  function clearHistory() {
-    searchHistory = [];
-    try { sessionStorage.removeItem("searchHistory"); } catch(e) {}
-    renderHistory();
-    showToast("조회 기록을 삭제했습니다");
   }
 
   /* ─────────────────────────────────────────
@@ -971,7 +911,6 @@
     closeEvictionModal();
     showToast(`${evictionTarget} 회차 처리 완료`);
     haptic(100);
-    // 실제 연동 시: POST /api/evictions { plate: evictionTarget }
   }
 
   /* ─────────────────────────────────────────
@@ -982,7 +921,7 @@
     document.getElementById("empty-state").classList.toggle("hidden", on);
   }
 
-  function clearResults() {
+  function clearResultsOnly() {
     const area   = document.getElementById("result-area");
     const border = document.getElementById("screen-border");
     area.innerHTML = "";
@@ -1008,16 +947,12 @@
      페이지 전환
   ───────────────────────────────────────── */
   function switchPage(pageId, title, tabEl) {
-    // 모든 페이지 숨기기
     document.querySelectorAll(".page-view").forEach(p => p.classList.add("hidden"));
-    // 대상 페이지 표시
     const target = document.getElementById("page-" + pageId);
     if (target) target.classList.remove("hidden");
 
-    // 타이틀 업데이트
     document.getElementById("page-title").textContent = title;
 
-    // 탭 활성 상태 업데이트
     document.querySelectorAll(".nav-tab").forEach(t => {
       t.classList.remove("active-tab");
       t.classList.add("text-on-surface-variant");
@@ -1025,14 +960,11 @@
     tabEl.classList.add("active-tab");
     tabEl.classList.remove("text-on-surface-variant");
 
-    // 기록 탭 진입 시 목록 동기화
-    if (pageId === "history") renderHistoryFull();
-
     haptic();
   }
 
   /* ─────────────────────────────────────────
-     야간 모드 토글
+     야간 모드 / 햅틱 설정
   ───────────────────────────────────────── */
   let nightMode = false;
   function toggleNightMode(btn) {
@@ -1050,9 +982,6 @@
     haptic();
   }
 
-  /* ─────────────────────────────────────────
-     햅틱 설정 토글
-  ───────────────────────────────────────── */
   let hapticEnabled = true;
   function toggleHapticSetting(btn) {
     hapticEnabled = !hapticEnabled;
@@ -1067,11 +996,8 @@
   }
 
   /* ─────────────────────────────────────────
-     기록 탭 전용 렌더
-  ───────────────────────────────────────── */
-  /* ─────────────────────────────────────────
      엑셀 업로드 — SheetJS 파싱
-     규칙: A열=차량번호, B열=차종, 1행부터 데이터 (헤더 없음)
+     규칙: A열=차량번호, B열=차종, C열=등록대장 페이지번호, 1행부터 데이터
   ───────────────────────────────────────── */
   function handleFileDrop(event) {
     event.preventDefault();
@@ -1083,11 +1009,15 @@
   function handleFileSelect(input) {
     const file = input.files[0];
     if (file) parseExcelFile(file);
-    input.value = ""; // 동일 파일 재업로드 허용
+    input.value = "";
   }
 
   function parseExcelFile(file) {
-    // 지원 형식 검증
+    if (!isAdminLoggedIn) {
+      showToast("관리자 로그인이 필요합니다");
+      return;
+    }
+
     const validTypes = ["xlsx", "xls", "csv"];
     const ext = file.name.split(".").pop().toLowerCase();
     if (!validTypes.includes(ext)) {
@@ -1098,25 +1028,23 @@
     showUploadStatus("loading", "읽는 중...", `${file.name} 파일을 분석하고 있습니다.`);
 
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
       try {
         const data  = new Uint8Array(e.target.result);
         const wb    = XLSX.read(data, { type: "array" });
-        const ws    = wb.Sheets[wb.SheetNames[0]]; // 첫 번째 시트 사용
-        // header:1 → 2D 배열, defval:"" → 빈 셀을 빈 문자열로
+        const ws    = wb.Sheets[wb.SheetNames[0]];
         const rows  = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
 
-        const parsed   = [];
-        const errors   = [];
+        const parsed = [];
+        const errors = [];
 
         rows.forEach((row, idx) => {
-          const plateRaw = String(row[0] || "").trim();   // A열
-          const modelRaw = String(row[1] || "").trim();   // B열
+          const plateRaw = String(row[0] || "").trim();   // A열: 차량번호
+          const modelRaw = String(row[1] || "").trim();   // B열: 차종
+          const pageRaw  = String(row[2] || "").trim();   // C열: 등록대장 페이지
 
-          // 빈 행 스킵
           if (!plateRaw && !modelRaw) return;
 
-          // 차량번호 기본 검증: 2자 이상, 숫자 포함
           if (plateRaw.length < 2 || !/\d/.test(plateRaw)) {
             errors.push(`${idx + 1}행: 차량번호 형식 오류 ("${plateRaw}")`);
             return;
@@ -1126,7 +1054,8 @@
             id:          `EX-${idx + 1}`,
             plateNumber: plateRaw,
             type:        "resident",
-            model:       modelRaw || "미입력"
+            model:       modelRaw || "미입력",
+            page:        pageRaw
           });
         });
 
@@ -1135,26 +1064,40 @@
           return;
         }
 
-        // DB에 반영 (기존 데이터 교체)
+        showUploadStatus("loading", "서버에 저장 중...", "Firestore에 데이터를 업로드하고 있습니다.");
+
+        // 원본 파일 보관은 현재 비활성 (Firebase Storage 미사용)
+        // 파일명/크기만 기록 — 다운로드 버튼은 url이 없으므로 자동으로 숨김 처리됨
         MOCK_DB.vehicles = parsed;
         MOCK_DB.meta.total    = parsed.length;
         MOCK_DB.meta.dataDate = new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
 
-        // UI 전체 갱신
+        lastOriginalFile = {
+          name: file.name,
+          url: null,
+          size: file.size,
+          uploadedAt: new Date().toISOString()
+        };
+
+        const saved = await saveToFirestore();
+
         refreshMetaUI();
+        renderDownloadBox();
 
         const errMsg = errors.length > 0
           ? `<p class="text-error font-medium mt-2">⚠ 스킵된 행 ${errors.length}건:</p><p class="text-xs text-on-surface-variant mt-1">${errors.slice(0, 5).join("<br>")}</p>`
           : "";
 
         showUploadStatus(
-          "success",
-          `${parsed.length.toLocaleString()}대 등록 완료`,
+          saved ? "success" : "error",
+          saved ? `${parsed.length.toLocaleString()}대 등록 완료` : "서버 저장 실패",
           `<p>${file.name}</p><p class="text-on-surface-variant text-xs mt-1">총 ${rows.length}행 읽음 → ${parsed.length}건 반영${errors.length > 0 ? `, ${errors.length}건 스킵` : ""}</p>${errMsg}`
         );
 
-        showToast(`차량 ${parsed.length.toLocaleString()}대 업로드 완료`);
-        haptic(80);
+        if (saved) {
+          showToast(`차량 ${parsed.length.toLocaleString()}대 업로드 완료 · 전 기기 동기화됨`);
+          haptic(80);
+        }
 
       } catch (err) {
         showUploadStatus("error", "파일 읽기 실패", `파일이 손상되었거나 지원하지 않는 형식입니다.<br><span class="text-xs opacity-60">${err.message}</span>`);
@@ -1171,9 +1114,9 @@
     const body   = document.getElementById("upload-status-body");
 
     const styles = {
-      loading: { bg: "bg-surface-container",     text: "text-on-surface",  icon: "hourglass_top"  },
-      success: { bg: "bg-[#e6f4e6]",             text: "text-[#1d8102]",   icon: "check_circle"   },
-      error:   { bg: "bg-error-container",       text: "text-error",       icon: "error"          },
+      loading: { bg: "bg-surface-container", text: "text-on-surface", icon: "hourglass_top" },
+      success: { bg: "bg-[#e6f4e6]",         text: "text-[#1d8102]",  icon: "check_circle"  },
+      error:   { bg: "bg-error-container",   text: "text-error",      icon: "error"         },
     };
     const s = styles[type] || styles.loading;
 
@@ -1194,9 +1137,36 @@
   function refreshMetaUI() {
     const { dataDate, total } = MOCK_DB.meta;
     document.getElementById("data-date-footer").textContent = `데이터 기준일: ${dataDate}`;
-    document.getElementById("header-data-date").textContent = dataDate;
-    document.getElementById("settings-total").textContent   = total.toLocaleString() + "대";
-    document.getElementById("settings-date").textContent    = `데이터 기준일: ${dataDate}`;
+    document.getElementById("header-data-date").textContent = dataDate === "—" ? "" : dataDate;
+    const totalEl = document.getElementById("settings-total");
+    const dateEl  = document.getElementById("settings-date");
+    if (totalEl) totalEl.textContent = total.toLocaleString() + "대";
+    if (dateEl)  dateEl.textContent  = `데이터 기준일: ${dataDate}`;
+  }
+
+  /* ─────────────────────────────────────────
+     원본 파일 다운로드 (요청 #5)
+  ───────────────────────────────────────── */
+  function renderDownloadBox() {
+    const box = document.getElementById("download-box");
+    if (!box) return;
+    if (!lastOriginalFile || !lastOriginalFile.url) {
+      box.classList.add("hidden");
+      return;
+    }
+    document.getElementById("download-filename").textContent = lastOriginalFile.name;
+    const sizeKb = lastOriginalFile.size ? `${Math.round(lastOriginalFile.size / 1024)}KB · ` : "";
+    const uploadedDate = lastOriginalFile.uploadedAt ? new Date(lastOriginalFile.uploadedAt).toLocaleString("ko-KR") : "";
+    document.getElementById("download-meta").textContent = `${sizeKb}${uploadedDate} 업로드`;
+    box.classList.remove("hidden");
+  }
+
+  function downloadOriginalFile() {
+    if (!lastOriginalFile || !lastOriginalFile.url) {
+      showToast("다운로드 가능한 원본 파일이 없습니다");
+      return;
+    }
+    window.open(lastOriginalFile.url, "_blank");
   }
 
   /* ─────────────────────────────────────────
