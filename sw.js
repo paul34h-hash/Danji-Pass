@@ -1,12 +1,12 @@
 /* ============================================================
    Danji Pass — Service Worker
-   전략: Cache First (정적 자산) + Network First (데이터)
+   전략:
+   - HTML 문서(index.html): Network First → 항상 최신 버전 우선 시도
+   - 정적 자산(아이콘, CDN 폰트/라이브러리): Cache First → 빠른 로딩
    ============================================================ */
 
-const CACHE_NAME    = "danji-pass-v1";
+const CACHE_NAME    = "danji-pass-v2";
 const CACHE_URLS    = [
-  "/",
-  "/index.html",
   "/manifest.json",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
@@ -21,7 +21,6 @@ const CACHE_URLS    = [
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // CDN은 실패해도 설치 중단 안 함 (addAll 대신 개별 처리)
       return Promise.allSettled(
         CACHE_URLS.map((url) =>
           cache.add(url).catch((err) =>
@@ -31,10 +30,10 @@ self.addEventListener("install", (event) => {
       );
     })
   );
-  self.skipWaiting();
+  self.skipWaiting(); // 새 SW를 즉시 활성화 대기 상태로
 });
 
-/* ── 활성화: 이전 버전 캐시 정리 ── */
+/* ── 활성화: 이전 버전 캐시 정리 + 즉시 모든 탭 제어 ── */
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -46,44 +45,56 @@ self.addEventListener("activate", (event) => {
             return caches.delete(key);
           })
       )
-    )
+    ).then(() => self.clients.claim()) // 새 SW가 즉시 모든 열린 탭을 제어
   );
-  self.clients.claim();
 });
 
-/* ── Fetch: Cache First → Network Fallback ── */
+/* ── Fetch 전략 분기 ── */
 self.addEventListener("fetch", (event) => {
-  // POST 요청 및 chrome-extension 스킵
   if (event.request.method !== "GET") return;
   if (!event.request.url.startsWith("http")) return;
 
+  const isDocument =
+    event.request.mode === "navigate" ||
+    event.request.destination === "document" ||
+    event.request.url.endsWith("/index.html") ||
+    event.request.url.endsWith("/");
+
+  if (isDocument) {
+    // HTML 문서: Network First — 항상 최신 버전을 우선 시도
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const cloned = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match("/index.html")))
+    );
+    return;
+  }
+
+  // 정적 자산: Cache First → Network Fallback
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
-
-      // 캐시 미스 → 네트워크 요청 후 캐시 저장
       return fetch(event.request)
         .then((response) => {
-          // 유효한 응답만 캐싱
-          if (
-            !response ||
-            response.status !== 200 ||
-            response.type === "opaque"
-          ) {
+          if (!response || response.status !== 200 || response.type === "opaque") {
             return response;
           }
           const cloned = response.clone();
-          caches.open(CACHE_NAME).then((cache) =>
-            cache.put(event.request, cloned)
-          );
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
           return response;
         })
-        .catch(() => {
-          // 네트워크도 실패 → index.html 반환 (오프라인 fallback)
-          if (event.request.destination === "document") {
-            return caches.match("/index.html");
-          }
-        });
+        .catch(() => {});
     })
   );
+});
+
+/* ── 새 버전 활성화 시 열린 탭에 알림 → 자동 새로고침 ── */
+self.addEventListener("activate", () => {
+  self.clients.matchAll({ type: "window" }).then((clients) => {
+    clients.forEach((client) => client.postMessage({ type: "SW_UPDATED" }));
+  });
 });

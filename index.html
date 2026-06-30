@@ -668,9 +668,8 @@
     if (searchMode === "last4" && inputBuffer.length === MAX_LEN_LAST4) {
       pendingSearchTimer = setTimeout(() => {
         pendingSearchTimer = null;
-        // 타이머 실행 시점에도 길이가 여전히 4자리인 경우에만 검색 (그 사이 더 눌렸으면 스킵)
         if (inputBuffer.length === MAX_LEN_LAST4) doSearch();
-      }, 120);
+      }, 60);
     }
   }
 
@@ -789,7 +788,7 @@
       const results = searchVehicles(inputBuffer, searchMode);
       showLoading(false);
       renderResults(results);
-    }, 250);
+    }, 100);
   }
 
   /* ─────────────────────────────────────────
@@ -1230,12 +1229,25 @@
   });
 
   /* ─────────────────────────────────────────
-     Service Worker 등록
+     Service Worker 등록 — 새 버전 감지 시 자동 새로고침
   ───────────────────────────────────────── */
   if ("serviceWorker" in navigator) {
+    let refreshing = false;
+
+    // 새 SW가 컨트롤을 넘겨받으면(=새 버전 적용됨) 자동 새로고침
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("/sw.js")
-        .then(() => console.log("[Danji Pass] SW 등록 완료"))
+        .then((reg) => {
+          console.log("[Danji Pass] SW 등록 완료");
+          // 등록 직후 업데이트 확인 (배경에서 새 버전 체크)
+          reg.update();
+        })
         .catch((err) => console.warn("[Danji Pass] SW 등록 실패:", err));
     });
   }
