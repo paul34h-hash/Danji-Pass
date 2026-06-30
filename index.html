@@ -131,12 +131,12 @@
     background-color: #c3c6d6 !important;
   }
 
-  .plate-cursor::after {
-    content: '|';
+  .plate-cursor-blink {
     animation: blink 1s step-end infinite;
     color: #0052cc;
     font-weight: 300;
     margin-left: 2px;
+    display: inline-block;
   }
   @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
@@ -223,9 +223,9 @@
     <div class="bg-surface-container-lowest border-2 border-outline-variant rounded-xl px-6 py-5 flex items-center justify-between shadow-sm transition-all" id="input-display-box">
       <div class="flex-1">
         <p class="text-xs text-on-surface-variant mb-1 font-medium" id="input-label">차량번호 뒤 4자리 입력</p>
-        <div class="font-label-mono text-[40px] leading-none tracking-widest text-on-surface plate-cursor" id="plate-display"
+        <div class="font-label-mono text-[40px] leading-none tracking-widest text-on-surface inline-flex items-baseline" id="plate-display"
              style="font-family: 'JetBrains Mono', monospace; font-weight: 600; letter-spacing: 0.12em;">
-          <span id="plate-text" class="text-on-surface-variant">0000</span>
+          <span id="plate-text" class="text-on-surface-variant">0000</span><span id="plate-cursor-blink" class="plate-cursor-blink hidden">|</span>
         </div>
       </div>
       <button onclick="clearAll()" class="ml-4 w-12 h-12 flex items-center justify-center rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-90 transition-all text-on-surface-variant" title="전체 지우기">
@@ -705,8 +705,9 @@
      디스플레이 업데이트
   ───────────────────────────────────────── */
   function updateDisplay() {
-    const el    = document.getElementById("plate-text");
-    const box   = document.getElementById("input-display-box");
+    const el     = document.getElementById("plate-text");
+    const box    = document.getElementById("input-display-box");
+    const cursor = document.getElementById("plate-cursor-blink");
     const maxLen = searchMode === "last4" ? MAX_LEN_LAST4 : MAX_LEN_FULL;
 
     if (inputBuffer.length === 0) {
@@ -721,11 +722,12 @@
       box.classList.remove("border-outline-variant");
     }
 
-    const displayEl = document.getElementById("plate-display");
+    // 커서는 입력된 글자 바로 뒤(plate-text 옆)의 전용 span에 표시 —
+    // 더 이상 부모 div 끝에 붙는 ::after 방식이 아니므로 위치가 항상 정확함
     if (inputBuffer.length > 0 && inputBuffer.length < maxLen) {
-      displayEl.classList.add("plate-cursor");
+      cursor.classList.remove("hidden");
     } else {
-      displayEl.classList.remove("plate-cursor");
+      cursor.classList.add("hidden");
     }
   }
 
@@ -1196,26 +1198,55 @@
   }
 
   /* ─────────────────────────────────────────
-     모바일 터치 피드백 — 키패드 버튼 눌림 표시 보강
-     (onclick은 그대로 유지, 시각 피드백만 touchstart/touchend로 즉시 처리)
+     모바일 "빠른 탭" 처리 — iOS/안드로이드의 touchend→click 사이
+     ~300ms 지연(더블탭-줌 호환용 레거시 동작)을 우회한다.
+
+     동작 방식:
+     1) touchstart: 눌림 표시(key-pressed) 즉시 적용
+     2) touchend:  버튼의 onclick에 적힌 동작을 그 자리에서 바로 실행하고,
+                   뒤이어 브라우저가 발생시킬 합성 click 이벤트는 무시
+                   (한 번의 탭이 두 번 실행되는 것을 방지)
+     3) click(데스크톱 마우스 등 터치가 아닌 환경): 그대로 정상 동작
   ───────────────────────────────────────── */
+  let lastTouchActionTime = 0;
+
+  function runButtonAction(btn) {
+    // 브라우저가 onclick="..." 속성을 이미 함수로 파싱해 둔 프로퍼티를 그대로 호출
+    if (typeof btn.onclick === "function") {
+      try { btn.onclick.call(btn); }
+      catch (err) { console.warn("[Danji Pass] 버튼 액션 실행 실패:", err); }
+    }
+  }
+
   document.addEventListener("touchstart", (e) => {
-    const btn = e.target.closest(".key-btn");
+    const btn = e.target.closest(".key-btn, button[onclick]");
     if (btn) btn.classList.add("key-pressed");
   }, { passive: true });
 
   document.addEventListener("touchend", (e) => {
-    const btn = e.target.closest(".key-btn");
+    const btn = e.target.closest(".key-btn, button[onclick]");
     if (btn) {
-      // 짧은 지연 후 해제 — 눌림이 눈에 보이도록
       setTimeout(() => btn.classList.remove("key-pressed"), 80);
+      // iOS/안드로이드의 클릭 합성 지연을 기다리지 않고 즉시 실행
+      runButtonAction(btn);
+      lastTouchActionTime = Date.now();
+      e.preventDefault(); // 뒤따라올 합성 click을 막아 중복 실행 방지
     }
-  }, { passive: true });
+  }, { passive: false });
 
   document.addEventListener("touchcancel", (e) => {
-    const btn = e.target.closest(".key-btn");
+    const btn = e.target.closest(".key-btn, button[onclick]");
     if (btn) btn.classList.remove("key-pressed");
   }, { passive: true });
+
+  // 데스크톱(마우스 클릭) 등 touchend로 처리되지 않은 경우의 표준 click은 그대로 둠.
+  // 단, 방금 touchend로 이미 처리된 직후(300ms 이내) 발생하는 합성 click은 중복 실행 방지를 위해 무시.
+  document.addEventListener("click", (e) => {
+    if (Date.now() - lastTouchActionTime < 400) {
+      const btn = e.target.closest(".key-btn, button[onclick]");
+      if (btn) { e.preventDefault(); e.stopPropagation(); }
+    }
+  }, true);
 
   /* ─────────────────────────────────────────
      키보드 지원 (데스크탑)
