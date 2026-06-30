@@ -236,22 +236,22 @@
     <!-- 커스텀 키패드 -->
     <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-3 shadow-sm">
       <div class="grid grid-cols-3 gap-2 mb-2">
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('1')">1</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('2')">2</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('3')">3</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('4')">4</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('5')">5</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('6')">6</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('7')">7</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('8')">8</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('9')">9</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface" style="font-family:'JetBrains Mono',monospace;" onclick="pressKey('1')">1</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface" style="font-family:'JetBrains Mono',monospace;" onclick="pressKey('2')">2</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface" style="font-family:'JetBrains Mono',monospace;" onclick="pressKey('3')">3</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface" style="font-family:'JetBrains Mono',monospace;" onclick="pressKey('4')">4</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface" style="font-family:'JetBrains Mono',monospace;" onclick="pressKey('5')">5</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface" style="font-family:'JetBrains Mono',monospace;" onclick="pressKey('6')">6</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface" style="font-family:'JetBrains Mono',monospace;" onclick="pressKey('7')">7</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface" style="font-family:'JetBrains Mono',monospace;" onclick="pressKey('8')">8</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface" style="font-family:'JetBrains Mono',monospace;" onclick="pressKey('9')">9</button>
       </div>
       <div class="grid grid-cols-3 gap-2">
         <button id="btn-hangul" class="key-btn h-[56px] bg-error-container rounded-lg text-[20px] font-bold text-on-error-container hidden" onclick="toggleHangul()" title="한글 입력">가</button>
         <button id="btn-backspace" class="key-btn h-[56px] bg-error-container rounded-lg flex items-center justify-center text-on-error-container" onclick="pressBackspace()">
           <span class="material-symbols-outlined text-[26px]">backspace</span>
         </button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('0')">0</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface" style="font-family:'JetBrains Mono',monospace;" onclick="pressKey('0')">0</button>
         <button class="key-btn h-[56px] bg-primary-container rounded-lg text-[16px] font-bold text-on-primary" onclick="doSearch()" id="btn-confirm">확인</button>
       </div>
 
@@ -634,8 +634,16 @@
   /* ─────────────────────────────────────────
      키패드 이벤트
   ───────────────────────────────────────── */
+  let pendingSearchTimer = null;
+
   function pressKey(char) {
     haptic();
+
+    // 이전에 예약된 자동검색이 있다면 취소 (빠른 연속 입력 대응)
+    if (pendingSearchTimer) {
+      clearTimeout(pendingSearchTimer);
+      pendingSearchTimer = null;
+    }
 
     // 결과가 이미 표시된 상태에서 새 숫자 입력 시 자동 초기화 후 새 검색 시작 (요청 #6)
     if (!document.getElementById("result-area").classList.contains("hidden") && /[0-9]/.test(char)) {
@@ -644,6 +652,13 @@
     }
 
     const maxLen = searchMode === "last4" ? MAX_LEN_LAST4 : MAX_LEN_FULL;
+
+    // 4자리(또는 최대길이) 다 찬 상태에서 새 숫자가 더 들어오면
+    // 옛 입력을 버리지 않고, 새 숫자로 새로 시작 (빠른 연타 시 입력 누락 방지)
+    if (inputBuffer.length >= maxLen && /[0-9]/.test(char)) {
+      inputBuffer = "";
+    }
+
     if (inputBuffer.length >= maxLen) return;
     if (searchMode === "last4" && !/[0-9]/.test(char)) return;
 
@@ -651,7 +666,11 @@
     updateDisplay();
 
     if (searchMode === "last4" && inputBuffer.length === MAX_LEN_LAST4) {
-      setTimeout(doSearch, 120);
+      pendingSearchTimer = setTimeout(() => {
+        pendingSearchTimer = null;
+        // 타이머 실행 시점에도 길이가 여전히 4자리인 경우에만 검색 (그 사이 더 눌렸으면 스킵)
+        if (inputBuffer.length === MAX_LEN_LAST4) doSearch();
+      }, 120);
     }
   }
 
@@ -669,6 +688,7 @@
 
   function pressBackspace() {
     haptic();
+    if (pendingSearchTimer) { clearTimeout(pendingSearchTimer); pendingSearchTimer = null; }
     inputBuffer = inputBuffer.slice(0, -1);
     updateDisplay();
     clearResultsOnly();
@@ -676,6 +696,7 @@
 
   function clearAll() {
     haptic();
+    if (pendingSearchTimer) { clearTimeout(pendingSearchTimer); pendingSearchTimer = null; }
     inputBuffer = "";
     updateDisplay();
     clearResultsOnly();
