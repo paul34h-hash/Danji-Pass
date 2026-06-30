@@ -2,7 +2,7 @@
 <html class="light" lang="ko">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
 <meta name="theme-color" content="#003d9b"/>
 <title>Danji Pass</title>
 <link rel="manifest" href="/manifest.json"/>
@@ -116,14 +116,20 @@
     font-family: 'Hanken Grotesk', sans-serif;
     -webkit-font-smoothing: antialiased;
     min-height: max(884px, 100dvh);
+    touch-action: manipulation; /* 더블탭 줌 방지, 클릭 지연 제거 */
   }
 
   .key-btn {
-    transition: transform 0.08s ease, background-color 0.08s ease;
+    transition: transform 0.06s ease, background-color 0.06s ease;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
-  .key-btn:active { transform: scale(0.93); }
+  .key-btn:active,
+  .key-btn.key-pressed {
+    transform: scale(0.90);
+    background-color: #c3c6d6 !important;
+  }
 
   .plate-cursor::after {
     content: '|';
@@ -230,49 +236,49 @@
     <!-- 커스텀 키패드 -->
     <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-3 shadow-sm">
       <div class="grid grid-cols-3 gap-2 mb-2">
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high active:bg-surface-container-highest" onclick="pressKey('1')">1</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('2')">2</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('3')">3</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('4')">4</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('5')">5</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('6')">6</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('7')">7</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('8')">8</button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('9')">9</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('1')">1</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('2')">2</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('3')">3</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('4')">4</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('5')">5</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('6')">6</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('7')">7</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('8')">8</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('9')">9</button>
       </div>
       <div class="grid grid-cols-3 gap-2">
-        <button id="btn-hangul" class="key-btn h-[56px] bg-error-container rounded-lg text-[20px] font-bold text-on-error-container hover:opacity-80 hidden" onclick="toggleHangul()" title="한글 입력">가</button>
-        <button id="btn-backspace" class="key-btn h-[56px] bg-error-container rounded-lg flex items-center justify-center text-on-error-container hover:opacity-80" onclick="pressBackspace()">
+        <button id="btn-hangul" class="key-btn h-[56px] bg-error-container rounded-lg text-[20px] font-bold text-on-error-container hidden" onclick="toggleHangul()" title="한글 입력">가</button>
+        <button id="btn-backspace" class="key-btn h-[56px] bg-error-container rounded-lg flex items-center justify-center text-on-error-container" onclick="pressBackspace()">
           <span class="material-symbols-outlined text-[26px]">backspace</span>
         </button>
-        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface hover:bg-surface-container-high" onclick="pressKey('0')">0</button>
-        <button class="key-btn h-[56px] bg-primary-container rounded-lg text-[16px] font-bold text-on-primary hover:opacity-90" onclick="doSearch()" id="btn-confirm">확인</button>
+        <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[20px] font-bold text-on-surface" onclick="pressKey('0')">0</button>
+        <button class="key-btn h-[56px] bg-primary-container rounded-lg text-[16px] font-bold text-on-primary" onclick="doSearch()" id="btn-confirm">확인</button>
       </div>
 
       <div id="hangul-pad" class="hidden mt-2">
         <div class="grid grid-cols-5 gap-1">
-          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('가')">가</button>
-          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('나')">나</button>
-          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('다')">다</button>
-          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('라')">라</button>
-          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('마')">마</button>
-          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('바')">바</button>
-          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('사')">사</button>
-          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('아')">아</button>
-          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('자')">자</button>
-          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('차')">차</button>
-          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('카')">카</button>
-          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('타')">타</button>
-          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('파')">파</button>
-          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold hover:bg-surface-container-high" onclick="pressKey('하')">하</button>
-          <button class="key-btn h-[44px] bg-surface-container-high rounded-lg text-[13px] font-bold hover:bg-surface-container-highest" onclick="toggleHangul()">숫자</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold" onclick="pressKey('가')">가</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold" onclick="pressKey('나')">나</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold" onclick="pressKey('다')">다</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold" onclick="pressKey('라')">라</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold" onclick="pressKey('마')">마</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold" onclick="pressKey('바')">바</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold" onclick="pressKey('사')">사</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold" onclick="pressKey('아')">아</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold" onclick="pressKey('자')">자</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold" onclick="pressKey('차')">차</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold" onclick="pressKey('카')">카</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold" onclick="pressKey('타')">타</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold" onclick="pressKey('파')">파</button>
+          <button class="key-btn h-[44px] bg-surface-container rounded-lg text-[16px] font-bold" onclick="pressKey('하')">하</button>
+          <button class="key-btn h-[44px] bg-surface-container-high rounded-lg text-[13px] font-bold" onclick="toggleHangul()">숫자</button>
         </div>
         <!-- 지역명 (울산/서울 등 시도형 번호판 지원) -->
         <div class="grid grid-cols-4 gap-1 mt-1">
-          <button class="key-btn h-[40px] bg-secondary-container rounded-lg text-[13px] font-bold hover:opacity-80" onclick="pressRegion('서울')">서울</button>
-          <button class="key-btn h-[40px] bg-secondary-container rounded-lg text-[13px] font-bold hover:opacity-80" onclick="pressRegion('울산')">울산</button>
-          <button class="key-btn h-[40px] bg-secondary-container rounded-lg text-[13px] font-bold hover:opacity-80" onclick="pressRegion('부산')">부산</button>
-          <button class="key-btn h-[40px] bg-secondary-container rounded-lg text-[13px] font-bold hover:opacity-80" onclick="pressRegion('경남')">경남</button>
+          <button class="key-btn h-[40px] bg-secondary-container rounded-lg text-[13px] font-bold" onclick="pressRegion('서울')">서울</button>
+          <button class="key-btn h-[40px] bg-secondary-container rounded-lg text-[13px] font-bold" onclick="pressRegion('울산')">울산</button>
+          <button class="key-btn h-[40px] bg-secondary-container rounded-lg text-[13px] font-bold" onclick="pressRegion('부산')">부산</button>
+          <button class="key-btn h-[40px] bg-secondary-container rounded-lg text-[13px] font-bold" onclick="pressRegion('경남')">경남</button>
         </div>
       </div>
     </div>
@@ -496,7 +502,7 @@
     ]
   };
 
-  const ADMIN_PASSWORD = "danji2024"; // 관리자 비밀번호 — 운영 시 변경 권장
+  const ADMIN_PASSWORD = "woaldjqtsp"; // 관리자 비밀번호
 
   let inputBuffer    = "";
   let searchMode      = "last4";
@@ -1168,6 +1174,28 @@
     }
     window.open(lastOriginalFile.url, "_blank");
   }
+
+  /* ─────────────────────────────────────────
+     모바일 터치 피드백 — 키패드 버튼 눌림 표시 보강
+     (onclick은 그대로 유지, 시각 피드백만 touchstart/touchend로 즉시 처리)
+  ───────────────────────────────────────── */
+  document.addEventListener("touchstart", (e) => {
+    const btn = e.target.closest(".key-btn");
+    if (btn) btn.classList.add("key-pressed");
+  }, { passive: true });
+
+  document.addEventListener("touchend", (e) => {
+    const btn = e.target.closest(".key-btn");
+    if (btn) {
+      // 짧은 지연 후 해제 — 눌림이 눈에 보이도록
+      setTimeout(() => btn.classList.remove("key-pressed"), 80);
+    }
+  }, { passive: true });
+
+  document.addEventListener("touchcancel", (e) => {
+    const btn = e.target.closest(".key-btn");
+    if (btn) btn.classList.remove("key-pressed");
+  }, { passive: true });
 
   /* ─────────────────────────────────────────
      키보드 지원 (데스크탑)
