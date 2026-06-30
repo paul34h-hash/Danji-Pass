@@ -369,19 +369,7 @@
           <div class="px-5 py-4 bg-surface-container-lowest text-sm" id="upload-status-body"></div>
         </div>
 
-        <!-- 원본 파일 다운로드 -->
-        <div id="download-box" class="hidden bg-surface-container-lowest border border-outline-variant rounded-xl px-5 py-4 flex items-center justify-between shadow-sm">
-          <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary">description</span>
-            <div>
-              <p class="font-bold text-sm" id="download-filename">—</p>
-              <p class="text-xs text-on-surface-variant" id="download-meta">—</p>
-            </div>
-          </div>
-          <button onclick="downloadOriginalFile()" class="flex items-center gap-1 text-primary font-bold text-sm hover:bg-primary-fixed px-3 py-2 rounded-lg transition-colors">
-            <span class="material-symbols-outlined text-[18px]">download</span>다운로드
-          </button>
-        </div>
+        <!-- (원본 파일 다운로드 기능은 현재 비활성 — Firebase Storage 미사용) -->
 
         <!-- 설정 메뉴 -->
         <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm divide-y divide-outline-variant">
@@ -454,7 +442,7 @@
 </div>
 
 <!-- ══════════════════════════════════════════
-     Firebase 모듈 (Firestore + Storage + Analytics)
+     Firebase 모듈 (Firestore + Analytics)
 ════════════════════════════════════════════ -->
 <script type="module">
   import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -462,9 +450,6 @@
   import {
     getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  import {
-    getStorage, ref, uploadBytes, getDownloadURL
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey:            "AIzaSyB2f0W3y00_QrEPJ1e0cCTLKSfk49wvYaQ",
@@ -479,10 +464,9 @@
   const app       = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
   const db        = getFirestore(app);
-  const storage   = getStorage(app);
 
   // 전역으로 노출 (기존 vanilla JS 섹션에서 사용)
-  window.__firebase = { db, storage, doc, getDoc, setDoc, onSnapshot, serverTimestamp, ref, uploadBytes, getDownloadURL };
+  window.__firebase = { db, doc, getDoc, setDoc, onSnapshot, serverTimestamp };
 
   console.log("[Danji Pass] Firebase 연결 완료");
 
@@ -519,7 +503,7 @@
   let isHangulMode    = false;
   let evictionTarget  = null;
   let isAdminLoggedIn = false;
-  let lastOriginalFile = null; // { name, url, size, uploadedAt }
+  let lastOriginalFile = null; // 현재 미사용 (Storage 비활성) — 추후 업그레이드 시 재활성 가능
 
   const MAX_LEN_LAST4 = 4;
   const MAX_LEN_FULL  = 12; // "울산31무5224" 등 지역명 포함 최대 길이
@@ -1082,24 +1066,15 @@
 
         showUploadStatus("loading", "서버에 저장 중...", "Firestore에 데이터를 업로드하고 있습니다.");
 
-        // 원본 파일 Storage 업로드 (재다운로드용)
-        let fileUrl = null;
-        try {
-          const { storage, ref, uploadBytes, getDownloadURL } = window.__firebase;
-          const storageRef = ref(storage, `uploads/${Date.now()}_${file.name}`);
-          await uploadBytes(storageRef, file);
-          fileUrl = await getDownloadURL(storageRef);
-        } catch (storageErr) {
-          console.warn("[Danji Pass] Storage 업로드 실패 (계속 진행):", storageErr);
-        }
-
+        // 원본 파일 보관은 현재 비활성 (Firebase Storage 미사용)
+        // 파일명/크기만 기록 — 다운로드 버튼은 url이 없으므로 자동으로 숨김 처리됨
         MOCK_DB.vehicles = parsed;
         MOCK_DB.meta.total    = parsed.length;
         MOCK_DB.meta.dataDate = new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
 
         lastOriginalFile = {
           name: file.name,
-          url: fileUrl,
+          url: null,
           size: file.size,
           uploadedAt: new Date().toISOString()
         };
