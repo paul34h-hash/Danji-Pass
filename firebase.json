@@ -1,4 +1,10 @@
 {
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "hosting": {
     "public": ".",
     "ignore": [
@@ -8,7 +14,9 @@
       ".gitignore",
       ".git/**",
       "README.md",
-      "node_modules/**"
+      "node_modules/**",
+      "firestore.rules",
+      "storage.rules"
     ],
     "rewrites": [
       {

@@ -1,0 +1,15 @@
+rules_version = '2';
+
+// ============================================================
+// Danji Pass — Storage 보안 규칙
+// uploads/ 경로: 엑셀 원본 파일 보관 (재다운로드용)
+// ============================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /uploads/{fileName} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}
