@@ -22,7 +22,9 @@ jobs:
         run: npm install -g firebase-tools
 
       - name: 서비스 계정 키 파일 생성
-        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "${{ runner.temp }}/firebase-key.json"
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: printenv FIREBASE_SERVICE_ACCOUNT > "${{ runner.temp }}/firebase-key.json"
 
       - name: Firebase Hosting 배포
         run: firebase deploy --only hosting --project danji-pass --non-interactive
