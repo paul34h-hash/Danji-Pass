@@ -187,6 +187,68 @@
 
   /* 대형 결과 카드 — 화면 메인 콘텐츠로 확대 */
   .result-hero { min-height: 260px; }
+
+  /* Camera UI */
+  .camera-container {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 75%; /* 4:3 aspect ratio */
+    background-color: #000;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    display: none;
+  }
+  .camera-container.active {
+    display: block;
+  }
+  #camera-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .camera-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70%;
+    height: 30%;
+    border: 3px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.5);
+    border-radius: 0.5rem;
+    pointer-events: none;
+  }
+  .camera-controls {
+    position: absolute;
+    bottom: 12px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 10;
+  }
+  .camera-zoom-slider {
+    width: 200px;
+    accent-color: #0052cc;
+  }
+  .camera-status {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 10;
+  }
 </style>
 </head>
 <body class="bg-surface text-on-surface min-h-screen flex flex-col">
@@ -212,6 +274,44 @@
   ════════════════════════════════════════════ -->
   <div id="page-search" class="page-view">
   <section class="p-margin-mobile space-y-4 max-w-2xl mx-auto w-full">
+
+    <!-- 카메라 토글 버튼 -->
+    <button onclick="toggleCamera()" class="w-full h-12 bg-primary-container text-on-primary rounded-xl font-bold flex items-center justify-center gap-2" id="btn-toggle-camera">
+      <span class="material-symbols-outlined">photo_camera</span>
+      <span>카메라로 번호 인식</span>
+    </button>
+
+    <!-- 카메라 뷰포트 -->
+    <div id="camera-wrapper" class="camera-container shadow-sm">
+      <video id="camera-video" playsinline autoplay muted></video>
+      <div class="camera-guide" id="camera-guide-box"></div>
+      <div class="camera-status" id="ocr-status">카메라 켜는 중...</div>
+      
+      <!-- 상단 컨트롤 (닫기/플래시) -->
+      <div class="absolute top-3 right-3 flex gap-2 z-10">
+        <button onclick="toggleFlash()" class="w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center backdrop-blur-sm" id="btn-flash" style="display:none;">
+          <span class="material-symbols-outlined">flashlight_on</span>
+        </button>
+        <button onclick="toggleCamera()" class="w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center backdrop-blur-sm">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- 하단 캡처 및 줌 -->
+      <div class="camera-controls">
+        <div id="zoom-container" class="flex items-center gap-2 bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm hidden">
+          <span class="text-white text-xs font-bold">1x</span>
+          <input type="range" id="camera-zoom" class="camera-zoom-slider" min="1" max="3" step="0.1" value="1" oninput="applyZoom(this.value)">
+          <span class="text-white text-xs font-bold">3x</span>
+        </div>
+        <button onclick="captureAndScan()" class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg border-4 border-gray-300 active:scale-95 transition-transform" id="btn-capture">
+          <span class="material-symbols-outlined text-[32px] text-primary">search</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 전처리 디버깅용 캔버스 (개발용/숨김 가능) -->
+    <canvas id="ocr-debug-canvas" class="hidden w-full h-24 bg-surface-container rounded-lg object-contain border border-outline-variant"></canvas>
 
     <!-- 검색 모드 토글 -->
     <div class="flex bg-surface-container rounded-lg p-1 gap-1">
@@ -246,7 +346,7 @@
         <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface" style="font-family:'JetBrains Mono',monospace;" onclick="pressKey('8')">8</button>
         <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface" style="font-family:'JetBrains Mono',monospace;" onclick="pressKey('9')">9</button>
       </div>
-      <div class="grid grid-cols-3 gap-2">
+      <div class="grid grid-cols-3 gap-2" id="keypad-bottom-row">
         <button id="btn-hangul" class="key-btn h-[56px] bg-error-container rounded-lg text-[20px] font-bold text-on-error-container hidden" onclick="toggleHangul()" title="한글 입력">가</button>
         <button id="btn-backspace" class="key-btn h-[56px] bg-error-container rounded-lg flex items-center justify-center text-on-error-container" onclick="pressBackspace()">
           <span class="material-symbols-outlined text-[26px]">backspace</span>
@@ -452,7 +552,7 @@
 ════════════════════════════════════════════ -->
 <script type="module">
   import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getAnalytics }    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+  import { getAnalytics, isSupported as analyticsSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
   import {
     getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -467,9 +567,12 @@
     measurementId:     "G-SKP00Y2CF3"
   };
 
-  const app       = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const db        = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  // Analytics 미지원 환경(일부 웹뷰 등)에서 throw로 모듈 전체가 죽어
+  // Firestore 동기화까지 막히는 것을 방지
+  analyticsSupported().then((ok) => { if (ok) getAnalytics(app); }).catch(() => {});
 
   // 전역으로 노출 (기존 vanilla JS 섹션에서 사용)
   window.__firebase = { db, doc, getDoc, setDoc, onSnapshot, serverTimestamp };
@@ -486,6 +589,196 @@
      JavaScript — 메인 로직
 ════════════════════════════════════════════ -->
 <script>
+  /* ─────────────────────────────────────────
+     OCR (PaddleOCR / ppu-paddle-ocr) 카메라 연동 파이프라인
+  ───────────────────────────────────────── */
+  const PADDLE_OCR_CDN = "https://esm.sh/ppu-paddle-ocr@6.0.0/web";
+  let ocrService = null;
+  let ocrInitPromise = null;
+  let videoStream = null;
+  let videoTrack = null;
+  let isFlashOn = false;
+
+  function initOcrEngine() {
+    if (ocrInitPromise) return ocrInitPromise;
+    ocrInitPromise = (async () => {
+      updateOcrStatus("엔진 준비 중...");
+      const { PaddleOcrService, V5_KOREAN_MOBILE_MODEL } = await import(PADDLE_OCR_CDN);
+      updateOcrStatus("모델 다운로드 중... (최초 1회, 약 18MB)");
+      const service = new PaddleOcrService({ model: V5_KOREAN_MOBILE_MODEL });
+      await service.initialize();
+      ocrService = service;
+      updateOcrStatus("준비 완료");
+      return service;
+    })().catch(err => {
+      console.error("[OCR] 초기화 실패:", err);
+      updateOcrStatus("엔진 로드 실패");
+      showToast("OCR 엔진 초기화 실패. 네트워크 확인 후 다시 시도해주세요.");
+      ocrInitPromise = null; // 재시도 가능하도록 초기화
+      return null;
+    });
+    return ocrInitPromise;
+  }
+
+  function updateOcrStatus(msg) {
+    const el = document.getElementById("ocr-status");
+    if (el) el.textContent = msg;
+  }
+
+  async function toggleCamera() {
+    haptic();
+    const wrapper = document.getElementById("camera-wrapper");
+    const btn = document.getElementById("btn-toggle-camera");
+    
+    if (wrapper.classList.contains("active")) {
+      wrapper.classList.remove("active");
+      btn.style.display = "flex";
+      stopCamera();
+    } else {
+      btn.style.display = "none";
+      wrapper.classList.add("active");
+      document.getElementById("ocr-debug-canvas").classList.remove("hidden");
+      await startCamera();
+      initOcrEngine();
+    }
+  }
+
+  async function startCamera() {
+    updateOcrStatus("카메라 켜는 중...");
+    try {
+      videoStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }
+      });
+      const video = document.getElementById("camera-video");
+      video.srcObject = videoStream;
+      
+      videoTrack = videoStream.getVideoTracks()[0];
+      const capabilities = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
+      
+      if (capabilities.torch) {
+        document.getElementById("btn-flash").style.display = "flex";
+      } else {
+        document.getElementById("btn-flash").style.display = "none";
+      }
+
+      if (capabilities.zoom) {
+        const zoomSlider = document.getElementById("camera-zoom");
+        zoomSlider.min = capabilities.zoom.min || 1;
+        zoomSlider.max = capabilities.zoom.max || 3;
+        zoomSlider.step = capabilities.zoom.step || 0.1;
+        zoomSlider.value = videoTrack.getSettings().zoom || 1;
+        document.getElementById("zoom-container").classList.remove("hidden");
+      } else {
+        document.getElementById("zoom-container").classList.add("hidden");
+      }
+      
+      updateOcrStatus("스캔 준비됨");
+    } catch (err) {
+      console.error("[Camera] 권한 오류:", err);
+      updateOcrStatus("카메라 권한 없음");
+      alert("카메라 접근 권한이 필요합니다. 브라우저 설정에서 권한을 허용해주세요.");
+      toggleCamera();
+    }
+  }
+
+  async function applyZoom(value) {
+    if (!videoTrack) return;
+    try {
+      await videoTrack.applyConstraints({ advanced: [{ zoom: parseFloat(value) }] });
+    } catch (err) {
+      console.warn("줌 제어 실패", err);
+    }
+  }
+
+  function stopCamera() {
+    if (videoStream) {
+      videoStream.getTracks().forEach(t => t.stop());
+      videoStream = null;
+    }
+    // 엔진 재사용을 위해 terminate 안함
+    isFlashOn = false;
+    document.getElementById("ocr-debug-canvas").classList.add("hidden");
+  }
+
+  async function toggleFlash() {
+    if (!videoTrack) return;
+    try {
+      isFlashOn = !isFlashOn;
+      await videoTrack.applyConstraints({
+        advanced: [{ torch: isFlashOn }]
+      });
+      haptic(20);
+    } catch (err) {
+      console.warn("플래시 제어 실패", err);
+    }
+  }
+
+  async function captureAndScan() {
+    haptic(50);
+    if (!ocrService) {
+      initOcrEngine();
+      showToast("엔진 로딩 중입니다. 잠시 후 시도해주세요.");
+      return;
+    }
+    const video = document.getElementById("camera-video");
+    const guide = document.getElementById("camera-guide-box");
+    if (video.videoWidth === 0) return;
+
+    updateOcrStatus("이미지 처리 중...");
+
+    const scaleX = video.videoWidth / video.clientWidth;
+    const scaleY = video.videoHeight / video.clientHeight;
+    const rect = guide.getBoundingClientRect();
+    const videoRect = video.getBoundingClientRect();
+
+    // 가이드 박스 주변 8% 여유를 두고 크롭 (프레이밍 오차 흡수)
+    const marginX = rect.width * 0.08;
+    const marginY = rect.height * 0.08;
+    const cropX = Math.max(0, (rect.left - videoRect.left - marginX) * scaleX);
+    const cropY = Math.max(0, (rect.top - videoRect.top - marginY) * scaleY);
+    const cropW = Math.min(video.videoWidth - cropX, (rect.width + marginX * 2) * scaleX);
+    const cropH = Math.min(video.videoHeight - cropY, (rect.height + marginY * 2) * scaleY);
+
+    // PaddleOCR은 자체 전처리(감지+인식)를 수행하므로 원본 컬러 이미지를 그대로 전달
+    const TARGET_WIDTH = 640;
+    const TARGET_HEIGHT = Math.round(cropH * (TARGET_WIDTH / cropW));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = TARGET_WIDTH;
+    canvas.height = TARGET_HEIGHT;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, TARGET_WIDTH, TARGET_HEIGHT);
+
+    const debugCanvas = document.getElementById("ocr-debug-canvas");
+    debugCanvas.width = TARGET_WIDTH;
+    debugCanvas.height = TARGET_HEIGHT;
+    debugCanvas.getContext("2d").drawImage(canvas, 0, 0);
+
+    try {
+      updateOcrStatus("분석 중...");
+      const result = await ocrService.recognize(canvas, { flatten: true });
+      const rawText = result.text || "";
+      const text = rawText.replace(/\s/g, "");
+
+      const match = text.match(/(\d{4})[^\d]*$/);
+      if (match && match[1]) {
+        const last4 = match[1];
+        showToast("인식 성공: " + last4);
+        switchMode("last4");
+        inputBuffer = last4;
+        updateDisplay();
+        doSearch();
+        toggleCamera();
+      } else {
+        updateOcrStatus("번호를 찾을 수 없음");
+        showToast("인식 실패. (읽은값: " + (rawText.trim() || "없음") + ")");
+      }
+    } catch (err) {
+      console.error("[OCR] 에러:", err);
+      updateOcrStatus("분석 실패");
+    }
+  }
+
   /* ─────────────────────────────────────────
      기본 DB (Firestore 연결 전 임시 / 폴백용)
   ───────────────────────────────────────── */
@@ -751,14 +1044,19 @@
     const backspaceBtn = document.getElementById("btn-backspace");
     const hangulPad     = document.getElementById("hangul-pad");
 
+    const bottomRow = document.getElementById("keypad-bottom-row");
     if (mode === "full") {
       hangulBtn.classList.remove("hidden");
-      backspaceBtn.classList.add("hidden");
+      backspaceBtn.classList.remove("hidden");
       hangulPad.classList.add("hidden");
+      bottomRow.classList.remove("grid-cols-3");
+      bottomRow.classList.add("grid-cols-4");
     } else {
       hangulBtn.classList.add("hidden");
       backspaceBtn.classList.remove("hidden");
       hangulPad.classList.add("hidden");
+      bottomRow.classList.remove("grid-cols-4");
+      bottomRow.classList.add("grid-cols-3");
     }
 
     clearResultsOnly();
@@ -770,7 +1068,6 @@
     isHangulMode = !isHangulMode;
     document.getElementById("hangul-pad").classList.toggle("hidden", !isHangulMode);
     document.getElementById("btn-hangul").textContent = isHangulMode ? "숫자" : "가";
-    document.getElementById("btn-backspace").classList.remove("hidden");
     haptic();
   }
 
@@ -817,6 +1114,18 @@
   /* ─────────────────────────────────────────
      결과 렌더링 (대형 카드 — 화면 메인 비중)
   ───────────────────────────────────────── */
+  // Firestore/엑셀에서 온 값은 신뢰할 수 없으므로 innerHTML 주입 전 반드시 이스케이프
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  let borderTimer = null;
+
   function renderResults(vehicles) {
     const area  = document.getElementById("result-area");
     const empty = document.getElementById("empty-state");
@@ -839,15 +1148,18 @@
     area.classList.remove("hidden");
     empty.classList.add("hidden");
 
-    setTimeout(() => { border.className = ""; }, 3000);
+    if (borderTimer) clearTimeout(borderTimer);
+    borderTimer = setTimeout(() => { border.className = ""; borderTimer = null; }, 3000);
   }
 
   function buildResidentCard(v) {
+    const plate = escapeHtml(v.plateNumber);
+    const model = escapeHtml(v.model);
     const pageInfo = v.page ? `
           <div class="flex items-center gap-2 mt-3 pt-3 border-t border-outline-variant">
             <span class="material-symbols-outlined text-[18px] text-on-surface-variant">menu_book</span>
             <span class="text-xs text-on-surface-variant">등록대장 페이지</span>
-            <strong class="text-sm">${v.page}</strong>
+            <strong class="text-sm">${escapeHtml(v.page)}</strong>
           </div>` : "";
     return `
       <div class="result-card rounded-2xl overflow-hidden shadow-lg border border-outline-variant h-full flex flex-col">
@@ -859,10 +1171,10 @@
           <p class="text-sm text-on-surface-variant mb-2">차량 번호</p>
           <p class="font-bold text-[56px] leading-tight text-primary mb-4"
              style="font-family:'JetBrains Mono',monospace; letter-spacing:0.06em;"
-          >${v.plateNumber}</p>
+          >${plate}</p>
           <div class="flex items-center gap-2">
             <span class="text-on-surface-variant text-base">차량 모델</span>
-            <strong class="text-lg">${v.model}</strong>
+            <strong class="text-lg">${model}</strong>
           </div>
           ${pageInfo}
         </div>
@@ -870,6 +1182,7 @@
   }
 
   function buildUnknownCard(query) {
+    const q = escapeHtml(query);
     return `
       <div class="result-card rounded-2xl overflow-hidden shadow-lg border border-outline-variant h-full flex flex-col">
         <div class="flex items-center justify-between px-6 py-5" style="background:#d32f2f;">
@@ -881,8 +1194,8 @@
           <div class="flex items-start justify-between gap-4">
             <p class="font-bold text-[48px] leading-tight text-error"
                style="font-family:'JetBrains Mono',monospace; letter-spacing:0.06em;"
-            >${query}</p>
-            <button onclick="openEvictionModal('${query}', '미등록')"
+            >${q}</p>
+            <button data-plate="${q}" onclick="openEvictionModal(this.dataset.plate, '미등록')"
               class="px-5 h-touch-target bg-error text-on-error rounded-lg font-bold text-sm hover:opacity-90 active:scale-95 transition-all flex-shrink-0"
             >회차 처리</button>
           </div>
@@ -895,9 +1208,9 @@
   function buildMultiCard(vehicles) {
     const rows = vehicles.map(v => `
       <div class="vehicle-row px-4 py-4 flex justify-between items-center border-b border-outline-variant last:border-0"
-           onclick="quickSearch('${v.plateNumber}')">
-        <span class="font-bold text-base" style="font-family:'JetBrains Mono',monospace;">${v.plateNumber}</span>
-        <span class="text-sm font-medium text-primary">${v.model}</span>
+           data-plate="${escapeHtml(v.plateNumber)}" onclick="quickSearch(this.dataset.plate)">
+        <span class="font-bold text-base" style="font-family:'JetBrains Mono',monospace;">${escapeHtml(v.plateNumber)}</span>
+        <span class="text-sm font-medium text-primary">${escapeHtml(v.model)}</span>
       </div>`).join("");
 
     return `
@@ -936,8 +1249,9 @@
   }
 
   function confirmEviction() {
+    const plate = evictionTarget; // closeEvictionModal()이 evictionTarget을 null로 초기화하므로 먼저 백업
     closeEvictionModal();
-    showToast(`${evictionTarget} 회차 처리 완료`);
+    showToast(`${plate} 회차 처리 완료`);
     haptic(100);
   }
 
@@ -1049,11 +1363,11 @@
     const validTypes = ["xlsx", "xls", "csv"];
     const ext = file.name.split(".").pop().toLowerCase();
     if (!validTypes.includes(ext)) {
-      showUploadStatus("error", "지원하지 않는 형식", `${file.name} 은 지원하지 않습니다. .xlsx / .xls / .csv 파일을 사용해주세요.`);
+      showUploadStatus("error", "지원하지 않는 형식", `${escapeHtml(file.name)} 은 지원하지 않습니다. .xlsx / .xls / .csv 파일을 사용해주세요.`);
       return;
     }
 
-    showUploadStatus("loading", "읽는 중...", `${file.name} 파일을 분석하고 있습니다.`);
+    showUploadStatus("loading", "읽는 중...", `${escapeHtml(file.name)} 파일을 분석하고 있습니다.`);
 
     const reader = new FileReader();
     reader.onload = async function(e) {
@@ -1094,6 +1408,11 @@
 
         showUploadStatus("loading", "서버에 저장 중...", "Firestore에 데이터를 업로드하고 있습니다.");
 
+        // 저장 실패 시 되돌리기 위해 이전 상태 백업
+        const prevVehicles = MOCK_DB.vehicles;
+        const prevMeta     = { ...MOCK_DB.meta };
+        const prevFile     = lastOriginalFile;
+
         // 원본 파일 보관은 현재 비활성 (Firebase Storage 미사용)
         // 파일명/크기만 기록 — 다운로드 버튼은 url이 없으므로 자동으로 숨김 처리됨
         MOCK_DB.vehicles = parsed;
@@ -1109,17 +1428,24 @@
 
         const saved = await saveToFirestore();
 
+        if (!saved) {
+          // 서버 반영 실패 — 화면이 서버와 어긋나지 않도록 로컬 상태 복원
+          MOCK_DB.vehicles = prevVehicles;
+          MOCK_DB.meta     = prevMeta;
+          lastOriginalFile = prevFile;
+        }
+
         refreshMetaUI();
         renderDownloadBox();
 
         const errMsg = errors.length > 0
-          ? `<p class="text-error font-medium mt-2">⚠ 스킵된 행 ${errors.length}건:</p><p class="text-xs text-on-surface-variant mt-1">${errors.slice(0, 5).join("<br>")}</p>`
+          ? `<p class="text-error font-medium mt-2">⚠ 스킵된 행 ${errors.length}건:</p><p class="text-xs text-on-surface-variant mt-1">${errors.slice(0, 5).map(escapeHtml).join("<br>")}</p>`
           : "";
 
         showUploadStatus(
           saved ? "success" : "error",
           saved ? `${parsed.length.toLocaleString()}대 등록 완료` : "서버 저장 실패",
-          `<p>${file.name}</p><p class="text-on-surface-variant text-xs mt-1">총 ${rows.length}행 읽음 → ${parsed.length}건 반영${errors.length > 0 ? `, ${errors.length}건 스킵` : ""}</p>${errMsg}`
+          `<p>${escapeHtml(file.name)}</p><p class="text-on-surface-variant text-xs mt-1">총 ${rows.length}행 읽음 → ${parsed.length}건 반영${errors.length > 0 ? `, ${errors.length}건 스킵` : ""}</p>${errMsg}`
         );
 
         if (saved) {
@@ -1128,7 +1454,7 @@
         }
 
       } catch (err) {
-        showUploadStatus("error", "파일 읽기 실패", `파일이 손상되었거나 지원하지 않는 형식입니다.<br><span class="text-xs opacity-60">${err.message}</span>`);
+        showUploadStatus("error", "파일 읽기 실패", `파일이 손상되었거나 지원하지 않는 형식입니다.<br><span class="text-xs opacity-60">${escapeHtml(err.message)}</span>`);
       }
     };
     reader.readAsArrayBuffer(file);
@@ -1218,15 +1544,24 @@
     }
   }
 
+  let touchStartX = 0, touchStartY = 0;
+
   document.addEventListener("touchstart", (e) => {
     const btn = e.target.closest(".key-btn, button[onclick]");
-    if (btn) btn.classList.add("key-pressed");
+    if (btn) {
+      btn.classList.add("key-pressed");
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }
   }, { passive: true });
 
   document.addEventListener("touchend", (e) => {
     const btn = e.target.closest(".key-btn, button[onclick]");
     if (btn) {
       setTimeout(() => btn.classList.remove("key-pressed"), 80);
+      // 버튼 위에서 시작한 스크롤 제스처는 탭이 아니므로 액션을 실행하지 않음
+      const t = e.changedTouches[0];
+      if (Math.hypot(t.clientX - touchStartX, t.clientY - touchStartY) > 10) return;
       // iOS/안드로이드의 클릭 합성 지연을 기다리지 않고 즉시 실행
       runButtonAction(btn);
       lastTouchActionTime = Date.now();

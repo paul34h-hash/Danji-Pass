@@ -5,7 +5,7 @@
    - 정적 자산(아이콘, CDN 폰트/라이브러리): Cache First → 빠른 로딩
    ============================================================ */
 
-const CACHE_NAME    = "danji-pass-v2";
+const CACHE_NAME    = "danji-pass-v5";
 const CACHE_URLS    = [
   "/manifest.json",
   "/icons/icon-192.png",
@@ -90,11 +90,4 @@ self.addEventListener("fetch", (event) => {
         .catch(() => {});
     })
   );
-});
-
-/* ── 새 버전 활성화 시 열린 탭에 알림 → 자동 새로고침 ── */
-self.addEventListener("activate", () => {
-  self.clients.matchAll({ type: "window" }).then((clients) => {
-    clients.forEach((client) => client.postMessage({ type: "SW_UPDATED" }));
-  });
 });
