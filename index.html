@@ -314,7 +314,7 @@
     <canvas id="ocr-debug-canvas" class="hidden w-full h-24 bg-surface-container rounded-lg object-contain border border-outline-variant"></canvas>
 
     <!-- 검색 모드 토글 -->
-    <div class="flex bg-surface-container rounded-lg p-1 gap-1">
+    <div id="mode-toggle" class="flex bg-surface-container rounded-lg p-1 gap-1">
       <button class="mode-tab active flex-1 h-10 rounded-lg text-sm font-bold" data-mode="last4" onclick="switchMode('last4')">뒤 4자리</button>
       <button class="mode-tab flex-1 h-10 rounded-lg text-sm font-bold text-on-surface-variant" data-mode="full" onclick="switchMode('full')">전체 번호</button>
     </div>
@@ -334,7 +334,7 @@
     </div>
 
     <!-- 커스텀 키패드 -->
-    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-3 shadow-sm">
+    <div id="keypad-container" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-3 shadow-sm">
       <div class="grid grid-cols-3 gap-2 mb-2">
         <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface" style="font-family:'JetBrains Mono',monospace;" onclick="pressKey('1')">1</button>
         <button class="key-btn h-[56px] bg-surface-container rounded-lg text-[22px] font-bold text-on-surface" style="font-family:'JetBrains Mono',monospace;" onclick="pressKey('2')">2</button>
@@ -625,19 +625,30 @@
     if (el) el.textContent = msg;
   }
 
+  /* 카메라 모드 레이아웃: 키패드/입력창/탭을 숨겨 결과 카드가 카메라 바로 아래 보이게 */
+  function setCameraLayout(active) {
+    document.getElementById("mode-toggle").classList.toggle("hidden", active);
+    document.getElementById("input-display-box").classList.toggle("hidden", active);
+    document.getElementById("keypad-container").classList.toggle("hidden", active);
+    const hasResult = !document.getElementById("result-area").classList.contains("hidden");
+    document.getElementById("empty-state").classList.toggle("hidden", active || hasResult);
+  }
+
   async function toggleCamera() {
     haptic();
     const wrapper = document.getElementById("camera-wrapper");
     const btn = document.getElementById("btn-toggle-camera");
-    
+
     if (wrapper.classList.contains("active")) {
       wrapper.classList.remove("active");
       btn.style.display = "flex";
       stopCamera();
+      setCameraLayout(false);
     } else {
       btn.style.display = "none";
       wrapper.classList.add("active");
-      document.getElementById("ocr-debug-canvas").classList.remove("hidden");
+      clearResultsOnly();
+      setCameraLayout(true);
       await startCamera();
       initOcrEngine();
     }
@@ -763,12 +774,12 @@
       const match = text.match(/(\d{4})[^\d]*$/);
       if (match && match[1]) {
         const last4 = match[1];
-        showToast("인식 성공: " + last4);
         switchMode("last4");
         inputBuffer = last4;
         updateDisplay();
         doSearch();
-        toggleCamera();
+        // 카메라를 닫지 않고 결과를 바로 아래에 표시 — 연속 스캔 가능
+        updateOcrStatus(`인식: ${last4} — 다음 차량 스캔 가능`);
       } else {
         updateOcrStatus("번호를 찾을 수 없음");
         showToast("인식 실패. (읽은값: " + (rawText.trim() || "없음") + ")");
@@ -1147,6 +1158,7 @@
 
     area.classList.remove("hidden");
     empty.classList.add("hidden");
+    area.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
     if (borderTimer) clearTimeout(borderTimer);
     borderTimer = setTimeout(() => { border.className = ""; borderTimer = null; }, 3000);
