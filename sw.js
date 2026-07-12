@@ -5,7 +5,7 @@
    - 정적 자산(아이콘, CDN 폰트/라이브러리): Cache First → 빠른 로딩
    ============================================================ */
 
-const CACHE_NAME    = "danji-pass-v5";
+const CACHE_NAME    = "danji-pass-v6";
 const CACHE_URLS    = [
   "/manifest.json",
   "/icons/icon-192.png",
@@ -62,8 +62,9 @@ self.addEventListener("fetch", (event) => {
 
   if (isDocument) {
     // HTML 문서: Network First — 항상 최신 버전을 우선 시도
+    // cache: "no-cache" — 브라우저 HTTP 캐시를 거치지 않고 서버에 재검증 (구버전 고착 방지)
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request.url, { cache: "no-cache" })
         .then((response) => {
           const cloned = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
