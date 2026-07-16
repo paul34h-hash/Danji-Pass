@@ -724,6 +724,29 @@
     }
   }
 
+  /* 인식 결과에서 일련번호 끝 4자리 추출.
+     구형 2단 번호판은 기울어지면 줄 결합 순서가 뒤섞여 (예: "서울 가3456 31")
+     "끝 4자리" 규칙이 지역/분류 숫자와 섞인 오답을 만들 수 있으므로,
+     박스 단위로 "한글+4자리"(일련번호) 패턴을 먼저 찾는다. */
+  function extractPlateLast4(result) {
+    const texts = (result.results || [])
+      .map(b => String((b && b.text) || "").replace(/\s/g, ""))
+      .filter(t => t.length > 0);
+    texts.push(String(result.text || "").replace(/\s/g, "")); // 합친 텍스트는 마지막 후보
+
+    // 1순위: 한글 바로 뒤의 4자리 (신형 "12가3456", 구형 "가3456" 모두 해당)
+    for (const t of texts) {
+      const m = t.match(/[가-힣](\d{4})/);
+      if (m) return m[1];
+    }
+    // 2순위: 기존 규칙 — 텍스트 끝의 연속 4자리 (한글 인식 실패 시 폴백)
+    for (const t of texts) {
+      const m = t.match(/(\d{4})[^\d]*$/);
+      if (m) return m[1];
+    }
+    return null;
+  }
+
   async function captureAndScan() {
     haptic(50);
     if (!ocrService) {
@@ -767,13 +790,12 @@
 
     try {
       updateOcrStatus("분석 중...");
-      const result = await ocrService.recognize(canvas, { flatten: true });
+      // noCache: 라이브러리 결과 캐시가 유사 프레임을 동일 이미지로 오인해
+      // 직전 차량 번호를 반환하는 것 방지 (카메라 프레임은 캐시 이득도 없음)
+      const result = await ocrService.recognize(canvas, { flatten: true, noCache: true });
       const rawText = result.text || "";
-      const text = rawText.replace(/\s/g, "");
-
-      const match = text.match(/(\d{4})[^\d]*$/);
-      if (match && match[1]) {
-        const last4 = match[1];
+      const last4 = extractPlateLast4(result);
+      if (last4) {
         switchMode("last4");
         inputBuffer = last4;
         updateDisplay();
